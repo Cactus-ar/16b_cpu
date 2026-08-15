@@ -429,7 +429,7 @@
         "uuid": "b5539a6c-bbbf-4d18-9a91-102a9d77c4f9"
       }
     ],
-    "used_designators": "#FLG1-2,R1-8,R12-13,J1-3,#PWR1-10,#PWR14-26,U1-9,RV1,C1-4,C7,C9-13,SW1-4,D1,D3",
+    "used_designators": "#FLG1-2,R1-8,R12-13,J1-3,#PWR1-10,#PWR14-32,U1-9,RV1,C1-4,C7,C9-17,SW1-4,D1,D3",
     "variants": []
   },
   "sheets": [
@@ -439,7 +439,7 @@
     ],
     [
       "2fe6f2ab-bb53-4983-a2d9-d2c2b6cd7b6e",
-      "Coenctores"
+      "Conectores"
     ]
   ],
   "text_variables": {},
