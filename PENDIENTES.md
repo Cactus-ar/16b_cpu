@@ -32,7 +32,8 @@ Son internas de la tarjeta de control, porque el generador de inmediatos se mud�
 
 **Queda pendiente:**
 - Dirección del vector de interrupción → depende de `03-memoria-spec.md` (ítem 12).
-- Validar las marcas `[PROPUESTO]` de §7 (codificación del subcampo, IRQ_n por nivel).
+
+*(Las marcas de §7 — subcampo de sistema, IRQ_n por nivel — se validaron el 16-ago-2026, ver ítem 19.)*
 
 ---
 
