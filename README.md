@@ -10,7 +10,7 @@ El objetivo es una máquina capaz de ejecutar programas reales —bucles, condic
 
 ## Qué es esto
 
-Una CPU **multiciclo microprogramada** de 16 bits, repartida en diez tarjetas que se conectan a un **backplane** pasivo. Los módulos se comunican por un bus compartido de 16 bits con salidas **tri-state**: en cada ciclo, exactamente un módulo escribe en el bus y el resto escucha.
+Una CPU **multiciclo microprogramada** de 16 bits, repartida en nueve tarjetas que se conectan a un **backplane** pasivo. Los módulos se comunican por un bus compartido de 16 bits con salidas **tri-state**: en cada ciclo, exactamente un módulo escribe en el bus y el resto escucha.
 
 Números aproximados del sistema completo:
 
@@ -21,7 +21,7 @@ Números aproximados del sistema completo:
 | Registros | 8 de propósito general (R0 cableado a cero) |
 | Frecuencia | 1 Hz – 480 kHz, ajustable |
 | Consumo | 0,7 – 1,0 A a 5 V |
-| Tarjetas | 10 (más una opcional) |
+| Tarjetas | 9 (más una opcional) |
 | Formato de tarjeta | 100 × 160 mm |
 
 ### Por qué multiciclo y no single-cycle
@@ -64,7 +64,7 @@ Instrucciones de **ancho fijo de 16 bits**, arquitectura **load/store**. Cuatro 
 |---|---|
 | **R** | op(4) · rd(3) · rs(3) · rt(3) · funct(3) |
 | **I** | op(4) · rd(3) · rs(3) · imm(6) |
-| **L** | op(4) · rd(3) · imm(9) |
+| **L** | op(4) · rd(3) · —(1) · imm8(8) |
 | **J** | op(4) · imm(12) |
 
 ### Instrucciones
@@ -77,35 +77,40 @@ Instrucciones de **ancho fijo de 16 bits**, arquitectura **load/store**. Cuatro 
 | `0011` | `SW rd, imm(rs)` | mem[rs + imm] ← rd |
 | `0100` | `BEQ rd, rs, imm` | Salta si rd = rs |
 | `0101` | `BNE rd, rs, imm` | Salta si rd ≠ rs |
-| `0110` | `LUI rd, imm` | rd ← imm << 7 |
-| `0111` | `ORI rd, imm` | rd ← rd \| imm |
+| `0110` | `LUI rd, imm` | rd ← imm8 << 8 |
+| `0111` | `ORI rd, imm` | rd ← rd \| imm8 |
 | `1000` | `JALR rd, rs` | rd ← PC+1; PC ← rs |
 | `1001` | `JMP imm` | PC ← PC + imm |
 | `1010` | `IN rd, puerto` | rd ← puerto |
 | `1011` | `OUT rs, puerto` | puerto ← rs |
-| `1100`–`1111` | — | Libres |
+| `1100` | `HALT` | Detiene el reloj |
+| `1101` | Sistema | EI / DI / RETI (interrupciones) |
+| `1110` | — | Libre |
+| `1111` | — | Prefijo de expansión (reservado) |
 
 Los 3 bits de `funct` van **directo** al selector de la ALU, sin traducción intermedia. Eso elimina un decodificador entero.
 
 **R0 está cableado a cero**, lo que habilita pseudo-instrucciones que el ensamblador traduce y el hardware no necesita implementar: `MOV rd, rs` es `ADDI rd, rs, 0`, y `NOP` es `ADDI R0, R0, 0`.
 
-Detalle completo del encoding y semántica: *(documento del ISA — pendiente)*.
+Detalle completo del encoding, semántica y microcódigo: [`docs/01-isa-spec.md`](docs/01-isa-spec.md).
 
 ---
 
 ## Los módulos
+
+Son **nueve tarjetas**: el registro de instrucción se fusionó con la unidad de control (las señales de selección de registros derivan del IR y las emite el control — separarlos costaría nueve pines de backplane). El número 4 queda vacante para no invalidar referencias existentes.
 
 | # | Módulo | Función | Estado |
 |---|---|---|---|
 | 1 | **Reloj** | Oscilador, paso a paso, halt sincrónico, reset, brownout | Esquemático listo |
 | 2 | **Pruebas de bus** | 16 LEDs + 16 switches para inspeccionar y forzar el bus | Pendiente |
 | 3 | Contador de programa | PC con incremento y carga | Pendiente |
-| 4 | Registro de instrucción | IR y separación de campos | Pendiente |
+| 4 | — | *Fusionado con el 9* | |
 | 5 | Banco de registros | 8 × 16 bits, doble puerto de lectura | Pendiente |
 | 6 | ALU | Aritmética, lógica, corrimientos, banderas | Pendiente |
 | 7 | Memoria de datos + MAR | RAM y registro de direcciones | Pendiente |
 | 8 | Memoria de programa | ROM/EEPROM con carga desde el bus | Pendiente |
-| 9 | Unidad de control | Secuenciador y ROM de microcódigo | Pendiente |
+| 9 | Unidad de control | IR, secuenciador y ROM de microcódigo | Pendiente |
 | 10 | E/S | LCD HD44780 + teclado hexadecimal | Pendiente |
 | 11 | Teclado PS/2 | Opcional, posterior a la máquina funcionando | Pendiente |
 
@@ -121,7 +126,7 @@ Construirlo con flip-flops requeriría unos treinta integrados. La alternativa: 
 
 ## Convenciones del proyecto
 
-Estas reglas rigen las diez tarjetas y no se negocian por tarjeta.
+Estas reglas rigen las nueve tarjetas y no se negocian por tarjeta.
 
 **Familia 74HC a 5 V.** Consume mucho menos que la 74LS —relevante con 130 chips— y se consigue mejor.
 
@@ -154,24 +159,28 @@ Estas reglas rigen las diez tarjetas y no se negocian por tarjeta.
 
 ```
 ├── docs/
-│   ├── bus-spec-cpu16.md          ← Especificación normativa del bus
-│   ├── io-spec-cpu16.md           ← Subsistema de entrada/salida
-│   ├── modulo-01-reloj.md         ← Diseño y pruebas del reloj
-│   └── ...
-└── Cpu16_cad/
-    ├── conectores.kicad_sch       ← Hoja compartida por todas las tarjetas
-    └── Modulo_01_Reloj/
+│   ├── 00-bus-spec.md             ← Especificación normativa del bus
+│   ├── 01-isa-spec.md             ← ISA y microcódigo (precedencia máxima)
+│   ├── componentes.md             ← Lista maestra y disponibilidad
+│   └── modulos/
+│       ├── 01-reloj.md            ← Diseño y pruebas del reloj
+│       └── 01-reloj-kicad.md      ← Netlist e implementación en KiCad
+├── kicad/
+│   ├── comun/
+│   │   └── conectores.kicad_sch   ← Hoja compartida, fuente de verdad
+│   └── Modulo_01_Reloj/
+└── PENDIENTES.md                  ← Discrepancias y huecos abiertos
 ```
 
-`bus-spec-cpu16.md` es el documento **normativo**: define el pinout, el formato físico y las señales. Toda tarjeta debe cumplirlo.
+Los documentos normativos se leen en orden: `00-bus-spec.md` (pinout, formato físico, señales), `01-isa-spec.md` (instrucciones y microcódigo — ante conflicto, este manda), `02-io-spec.md` (E/S — pendiente de escribir).
 
-`conectores.kicad_sch` se copia sin modificar a cada proyecto nuevo. Contiene los dos conectores con etiquetas globales, ya verificado.
+`kicad/comun/conectores.kicad_sch` se copia sin modificar a cada proyecto nuevo. Contiene los dos conectores con etiquetas globales, ya verificado. Los cambios se hacen en `comun/` y se recopian.
 
 ---
 
 ## Cómo replicarlo
 
-1. Leer `bus-spec-cpu16.md` completo antes de tocar nada.
+1. Leer `docs/00-bus-spec.md` completo antes de tocar nada.
 2. Verificar disponibilidad local de: tiras de pines 2×28, TLC555, TL431 en TO-92.
 3. Construir el **módulo 1 (reloj)** en protoboard y validarlo con el procedimiento de prueba del documento.
 4. Construir el **módulo 2 (pruebas de bus)**.

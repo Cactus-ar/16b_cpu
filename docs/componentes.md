@@ -1,6 +1,8 @@
 # Componentes — Lista maestra y riesgo de disponibilidad
 
-**Versión 0.1** · Verificar disponibilidad **antes** de continuar el diseño
+**Versión 0.2** · **Última actualización: 2026-08-16** · Verificar disponibilidad **antes** de continuar el diseño
+
+Estados posibles de cada ítem: **por verificar** (no se confirmó disponibilidad ni precio) → **confirmado** (hay stock localizable) → **recibido** (en mano, y verificado si es memoria) → **descartado** (se reemplazó por alternativa). El valor de este documento está en mantenerse al día: actualizar el estado y la fecha del encabezado con cada novedad.
 
 Este documento existe porque no tiene sentido diseñar sobre componentes que no se van a conseguir. Las cantidades cubren el proyecto completo, incluidas las tarjetas todavía no diseñadas.
 
@@ -24,13 +26,15 @@ Toda la memoria del proyecto usa esa única huella. Ventajas:
 
 ### Lista
 
-| Uso | Chip | Cant. | Comprar |
-|---|---|---|---|
-| ROM de microcódigo | AT28C256-15PU | 4 | 10 |
-| Generador de inmediatos | AT28C256-15PU | 2 | 5 |
-| Memoria de programa | AT28C256-15PU | 2 | 5 |
-| RAM de datos | AS6C62256-55PCN | 2 | 6 |
-| **Total** | | **10** | **26** |
+| Uso | Chip | Cant. | Comprar | Estado |
+|---|---|---|---|---|---|
+| ROM de microcódigo | AT28C256-15PU | 4 | 10 | Por verificar |
+| Generador de inmediatos | AT28C256-15PU | 2 | 5 | Por verificar |
+| Memoria de programa | AT28C256-15PU | 2 | 5 | Por verificar |
+| RAM de datos | AS6C62256-55PCN | 2 | 6 | Por verificar |
+| **Total** | | **10** | **26** | |
+
+> Nota: el generador de inmediatos está actualmente resuelto en compuertas dentro de la tarjeta de control (`01-isa-spec.md` §5); sus dos EEPROM quedan en la lista como reserva por si esa decisión se revisa.
 
 Las cantidades a comprar contemplan el descarte por unidades defectuosas, que con proveedores de excedentes es esperable.
 
@@ -63,26 +67,26 @@ Para la EEPROM: AT28C64B (8K, alcanza pero sin margen) o cualquier 28C256 de seg
 
 Riesgo bajo: la familia se sigue fabricando activamente en DIP por Texas Instruments, Nexperia y onsemi. Aun así conviene comprar en cantidad — son unos 130 chips.
 
-| Chip | Función | Estimado | Comprar |
-|---|---|---|---|
-| 74HC00 | NAND cuádruple | 4 | 10 |
-| 74HC04 | Inversor séxtuple | 6 | 15 |
-| 74HC08 | AND cuádruple | 4 | 10 |
-| 74HC14 | Schmitt trigger séxtuple | 3 | 8 |
-| 74HC32 | OR cuádruple | 4 | 10 |
-| 74HC74 | Flip-flop D doble | 6 | 12 |
-| 74HC86 | XOR cuádruple | 8 | 15 |
-| 74HC138 | Decodificador 3 a 8 | 6 | 12 |
-| 74HC139 | Decodificador 2 a 4 doble | 3 | 8 |
-| 74HC153 | Mux 4 a 1 doble | 4 | 8 |
-| 74HC157 | Mux 2 a 1 cuádruple | 8 | 15 |
-| 74HC161 | Contador binario 4 bits | 6 | 12 |
-| 74HC163 | Contador sincrónico 4 bits | 4 | 8 |
-| 74HC244 | Buffer óctuple tri-state | 12 | 20 |
-| 74HC245 | Transceptor óctuple | 10 | 20 |
-| 74HC283 | Sumador completo 4 bits | 8 | 15 |
-| 74HC574 | Registro óctuple tri-state | 20 | 30 |
-| 74HC595 | Registro de desplazamiento | 2 | 5 |
+| Chip | Función | Estimado | Comprar | Estado |
+|---|---|---|---|---|
+| 74HC00 | NAND cuádruple | 4 | 10 | Por verificar |
+| 74HC04 | Inversor séxtuple | 6 | 15 | Por verificar |
+| 74HC08 | AND cuádruple | 4 | 10 | Por verificar |
+| 74HC14 | Schmitt trigger séxtuple | 3 | 8 | Por verificar |
+| 74HC32 | OR cuádruple | 4 | 10 | Por verificar |
+| 74HC74 | Flip-flop D doble | 6 | 12 | Por verificar |
+| 74HC86 | XOR cuádruple | 8 | 15 | Por verificar |
+| 74HC138 | Decodificador 3 a 8 | 6 | 12 | Por verificar |
+| 74HC139 | Decodificador 2 a 4 doble | 3 | 8 | Por verificar |
+| 74HC153 | Mux 4 a 1 doble | 4 | 8 | Por verificar |
+| 74HC157 | Mux 2 a 1 cuádruple | 8 | 15 | Por verificar |
+| 74HC161 | Contador binario 4 bits | 6 | 12 | Por verificar |
+| 74HC163 | Contador sincrónico 4 bits | 4 | 8 | Por verificar |
+| 74HC244 | Buffer óctuple tri-state | 12 | 20 | Por verificar |
+| 74HC245 | Transceptor óctuple | 10 | 20 | Por verificar |
+| 74HC283 | Sumador completo 4 bits | 8 | 15 | Por verificar |
+| 74HC574 | Registro óctuple tri-state | 20 | 30 | Por verificar |
+| 74HC595 | Registro de desplazamiento | 2 | 5 | Por verificar |
 
 **Total aproximado: 118 en el diseño, ~230 a comprar.**
 
@@ -94,11 +98,11 @@ Las cantidades son estimadas: las tarjetas 3 a 10 todavía no están diseñadas 
 
 ## 3. Componentes específicos ya definidos (Módulo 01)
 
-| Componente | Cant. | Riesgo |
-|---|---|---|
-| TLC555 o LMC555 (DIP-8) | 2 | Bajo — versión CMOS del 555 |
-| LM393 (DIP-8) | 1 | Muy bajo |
-| TL431 (TO-92) | 1 | Muy bajo. Alternativas: LM431, KA431 |
+| Componente | Cant. | Riesgo | Estado |
+|---|---|---|---|
+| TLC555 o LMC555 (DIP-8) | 2 | Bajo — versión CMOS del 555 | Por verificar |
+| LM393 (DIP-8) | 1 | Muy bajo | Por verificar |
+| TL431 (TO-92) | 1 | Muy bajo. Alternativas: LM431, KA431 | Por verificar |
 
 **Sobre el TLC555:** si solo se consigue NE555, funciona, pero inyecta un pico de corriente en la alimentación que la versión CMOS no tiene, y da flancos más sucios. Vale la pena insistir con la variante CMOS.
 
@@ -108,13 +112,13 @@ Las cantidades son estimadas: las tarjetas 3 a 10 todavía no están diseñadas 
 
 ## 4. Periféricos
 
-| Componente | Uso | Riesgo |
-|---|---|---|
-| LCD HD44780 16×2 o 20×4 | Salida v1 | Muy bajo — se fabrica masivamente |
-| 74C922 o MM74C922 | Codificador de teclado hexadecimal | **Alto** — obsoleto |
-| Teclado matricial 4×4 | Entrada v1 | Muy bajo |
-| ADC0804 o ADC0808 | Joystick analógico (futuro) | Medio |
-| Teclado PS/2 | Entrada v2 | **Alto** — ver nota |
+| Componente | Uso | Riesgo | Estado |
+|---|---|---|---|
+| LCD HD44780 16×2 o 20×4 | Salida v1 | Muy bajo — se fabrica masivamente | Por verificar |
+| 74C922 o MM74C922 | Codificador de teclado hexadecimal | **Alto** — obsoleto | Por verificar |
+| Teclado matricial 4×4 | Entrada v1 | Muy bajo | Por verificar |
+| ADC0804 o ADC0808 | Joystick analógico (futuro) | Medio | Por verificar |
+| Teclado PS/2 | Entrada v2 | **Alto** — ver nota | Por verificar |
 
 ### Nota sobre el 74C922
 
@@ -132,15 +136,15 @@ Por eso el PS/2 es el módulo 11, opcional y posterior a la máquina funcionando
 
 ## 5. Conectores y mecánica
 
-| Componente | Cant. | Nota |
-|---|---|---|
-| Tira de pines macho 2×28 | 20 | Dos por tarjeta, 9 tarjetas + repuestos |
-| Tira de pines hembra 2×28 | 20 | Para el backplane |
-| Zócalo DIP-14 | 60 | |
-| Zócalo DIP-16 | 40 | |
-| Zócalo DIP-20 | 40 | |
-| Zócalo DIP-28 (600 mil) | 15 | Memoria — **verificar el ancho** |
-| Guías laterales para tarjeta | 9 | Perfil en U, riel o impresión 3D |
+| Componente | Cant. | Nota | Estado |
+|---|---|---|---|
+| Tira de pines macho 2×28 | 20 | Dos por tarjeta, 9 tarjetas + repuestos | Por verificar |
+| Tira de pines hembra 2×28 | 20 | Para el backplane | Por verificar |
+| Zócalo DIP-14 | 60 | | Por verificar |
+| Zócalo DIP-16 | 40 | | Por verificar |
+| Zócalo DIP-20 | 40 | | Por verificar |
+| Zócalo DIP-28 (600 mil) | 15 | Memoria — **verificar el ancho** | Por verificar |
+| Guías laterales para tarjeta | 9 | Perfil en U, riel o impresión 3D | Por verificar |
 
 **Las tiras de pines se venden en tiras largas que se cortan a medida.** Comprar tiras de 2×40 y cortarlas sale más barato y flexible que buscar el largo exacto.
 
@@ -150,15 +154,15 @@ Por eso el PS/2 es el módulo 11, opcional y posterior a la máquina funcionando
 
 ## 6. Pasivos
 
-| Componente | Cant. estimada |
-|---|---|
-| Capacitor cerámico 100 nF | **200** |
-| Capacitor electrolítico 47 µF | 15 |
-| Capacitor electrolítico 100 µF | 5 |
-| Capacitor electrolítico 1000 µF | 2 |
-| Resistores varios ¼ W | Surtido |
-| Redes de resistores 8× 4k7 (bussed) | 10 |
-| LED alta eficiencia | 50 |
+| Componente | Cant. estimada | Estado |
+|---|---|---|
+| Capacitor cerámico 100 nF | **200** | Por verificar |
+| Capacitor electrolítico 47 µF | 15 | Por verificar |
+| Capacitor electrolítico 100 µF | 5 | Por verificar |
+| Capacitor electrolítico 1000 µF | 2 | Por verificar |
+| Resistores varios ¼ W | Surtido | Por verificar |
+| Redes de resistores 8× 4k7 (bussed) | 10 | Por verificar |
+| LED alta eficiencia | 50 | Por verificar |
 
 **Los 100 nF son el componente más usado del proyecto:** uno por integrado, 130 como mínimo. Comprar 200 de una.
 

@@ -1,6 +1,6 @@
 # KiCad — Módulo 01 (Reloj)
 
-Guía de implementación y netlist completo. Complemento de `modulo-01-reloj.md`.
+Guía de implementación y netlist completo. Complemento de `01-reloj.md`.
 
 ---
 

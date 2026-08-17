@@ -1,6 +1,6 @@
 # CPU 16 bits — Especificación de bus y tarjetas
 
-**Versión 0.1** · Documento normativo. Todo módulo debe cumplirlo.
+**Versión 0.2** · Documento normativo. Todo módulo debe cumplirlo. Ante conflicto con `01-isa-spec.md`, tiene precedencia el ISA.
 
 ---
 
@@ -8,9 +8,9 @@
 
 - Bus compartido de 16 bits, tri-state, con un solo emisor habilitado por vez.
 - Ejecución multiciclo controlada por microcódigo (ROM en la tarjeta de control).
-- ISA: load/store, instrucción fija de 16 bits, 8 registros de propósito general, R0 cableado a cero.
+- ISA: load/store, instrucción fija de 16 bits, 8 registros de propósito general, R0 cableado a cero. Detalle completo en `01-isa-spec.md`.
 - Familia lógica: **74HC**, alimentación **5 V**.
-- Frecuencia objetivo: 1 Hz a 500 kHz.
+- Frecuencia: 0,7 Hz a 480 kHz (los tres rangos reales del oscilador — ver `modulos/01-reloj.md`).
 
 ### Regla de oro del tri-state
 
@@ -112,7 +112,7 @@ Cada conector tiene dos filas de 28 contactos, designadas **A** (fila exterior, 
 | A5 | GND | Blindaje del reloj |
 | A6 | **RESET_n** | Activo en bajo, asíncrono |
 | A7 | **HALT_n** | Colector abierto, wired-OR |
-| A8 | IRQ_n | Reservado |
+| A8 | **IRQ_n** | Solicitud de interrupción, activa en bajo. La consume la tarjeta de control (ver `01-isa-spec.md` §7) |
 | A9 | GND | |
 | A10 | PC_OUT_n | Contador de programa al bus de datos |
 | A11 | RA_OUT_n | Puerto A del banco de registros al bus |
@@ -149,7 +149,7 @@ Cada conector tiene dos filas de 28 contactos, designadas **A** (fila exterior, 
 | B15–B17 | RSB0 … RSB2 | Dirección de lectura, puerto B |
 | B18–B20 | RSW0 … RSW2 | Dirección de escritura |
 | B21 | GND | |
-| B22, B23 | **IMM_SEL0, IMM_SEL1** | Campo y modo de extensión del inmediato |
+| B22, B23 | — | Reservado *(eran IMM_SEL0/1; el generador de inmediatos se mudó a la tarjeta de control junto con el IR y esas señales son internas)* |
 | B24 | **PROG_WE_n** | Escritura en memoria de programa (carga) |
 | B25 | — | Reservado |
 | B26 | +5 V | |
@@ -157,12 +157,7 @@ Cada conector tiene dos filas de 28 contactos, designadas **A** (fila exterior, 
 
 ### Codificación de IMM_SEL
 
-| SEL1 | SEL0 | Campo | Extensión |
-|---|---|---|---|
-| 0 | 0 | imm6 [5:0] | Signo |
-| 0 | 1 | imm9 [8:0] | Signo |
-| 1 | 0 | imm12 [11:0] | Signo |
-| 1 | 1 | imm9 [8:0] | Ceros |
+La tabla vive en `01-isa-spec.md` §5 — un solo lugar de verdad. Las señales `IMM_SEL0/1` son internas de la tarjeta de control.
 
 **Nota sobre HALT_n:** cualquier tarjeta puede tirarlo a masa para detener la máquina. Requiere un resistor de pull-up de 4k7 **en el backplane, uno solo en todo el sistema**. Si cada tarjeta pone el suyo, los pull-ups se suman en paralelo y el nivel bajo no llega a bajar lo suficiente.
 
@@ -177,16 +172,14 @@ El bus entrega un valor por ciclo, pero la ALU necesita dos operandos simultáne
 Secuencia correcta para una operación de tres registros:
 
 ```
-T2:  RA_OUT_n  + TMPA_LD                ; TMPA ← rs
-T3:  RB_OUT_n  + TMPB_LD                ; TMPB ← rt
-T4:  ALU_OUT_n + REG_WE + FLAGS_LD      ; rd ← TMPA op TMPB
+T1:  RA_OUT_n  + TMPA_LD                ; TMPA ← rs
+T2:  RB_OUT_n  + TMPB_LD                ; TMPB ← rt
+T3:  ALU_OUT_n + REG_WE + FLAGS_LD      ; rd ← TMPA op TMPB
 ```
 
+(T0 es el fetch, común a todas las instrucciones; numeración según `01-isa-spec.md` §6.)
+
 En ningún ciclo hay más de un emisor sobre el bus.
-
-**Nota sobre HALT_n:** cualquier tarjeta puede tirarlo a masa para detener la máquina. Requiere un resistor de pull-up de 4k7 **en el backplane, uno solo en todo el sistema**. Si cada tarjeta pone el suyo, los pull-ups se suman en paralelo y el nivel bajo no llega a bajar lo suficiente.
-
-**Nota sobre las fases de microciclo:** los antiguos T0–T5 no viajan por el backplane. El contador de microciclo queda dentro de la tarjeta de control, que ya emite las señales finales. Menos pines y menos ruido.
 
 ---
 
@@ -201,18 +194,21 @@ En ningún ciclo hay más de un emisor sobre el bus.
 
 ## 5. Orden de construcción
 
+El proyecto tiene **nueve tarjetas** (más el PS/2 opcional): el registro de instrucción se fusionó con la unidad de control y el número 4 queda vacante para no invalidar referencias existentes.
+
 | # | Módulo | Estado |
 |---|---|---|
-| 1 | Reloj | En diseño |
+| 1 | Reloj | Esquemático listo |
 | 2 | Tarjeta de pruebas de bus (LEDs + switches) | Pendiente |
 | 3 | Contador de programa | Pendiente |
-| 4 | Registro de instrucción | Pendiente |
+| 4 | — *(fusionado con el 9)* | |
 | 5 | Banco de registros | Pendiente |
 | 6 | ALU | Pendiente |
 | 7 | Memoria de datos + MAR | Pendiente |
 | 8 | Memoria de programa | Pendiente |
-| 9 | Unidad de control (microcódigo) | Pendiente |
+| 9 | Unidad de control (IR + microcódigo) | Pendiente |
 | 10 | E/S y display | Pendiente |
+| 11 | Teclado PS/2 *(opcional, posterior)* | Pendiente |
 
 El módulo 2 no es opcional: sin una tarjeta que te deje ver el bus y forzar valores a mano, depurar los siguientes es a ciegas.
 
@@ -280,7 +276,7 @@ El total de capacitancia del sistema ronda los 1,7 mF. Al encender, la fuente va
 
 Con fuente de laboratorio, el modo de corriente constante **es** una caída de tensión: ante un corto en cualquier tarjeta, el riel se hunde de forma gradual en lugar de cortarse. Durante ese descenso la lógica entra en zona indefinida y la máquina puede escribir basura en memoria antes de detenerse.
 
-Por eso la tarjeta de reloj incorpora detección de caída: un comparador que fuerza `RESET_n` cuando el riel baja de aproximadamente 4,6 V. Ver `modulo-01-reloj.md`.
+Por eso la tarjeta de reloj incorpora detección de caída: un comparador que fuerza `RESET_n` cuando el riel baja de aproximadamente 4,6 V. Ver `modulos/01-reloj.md`.
 
 ---
 

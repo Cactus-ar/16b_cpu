@@ -1,6 +1,6 @@
 # Módulo 01 — Reloj y temporización
 
-**Versión 0.1** · Primera tarjeta del sistema · Conforme a `bus-spec-cpu16.md`
+**Versión 0.2** · Primera tarjeta del sistema · Conforme a `00-bus-spec.md`
 
 ---
 
@@ -87,7 +87,7 @@ Configuración monoestable.
 | 8 | +5 V |
 
 - **R3** = 470 kΩ, **C2** = 1 µF → pulso de ≈ 517 ms.
-- **RP** = 10 kΩ de +5 V al nodo de disparo (pull-up).
+- **R10** = 10 kΩ de +5 V al nodo de disparo (pull-up). *(Antes documentado como `RP`; se renombró porque `RP` no es un designador válido en KiCad y el esquemático usa `R10`.)*
 - **SW2** = pulsador momentáneo, del nodo de disparo a GND.
 - **Filtro de disparo**: 10 kΩ en serie hacia el pin 2, con 100 nF del pin 2 a GND.
 
@@ -162,7 +162,9 @@ Detección con un TL431 como referencia y un comparador:
 - **U8** = LM393 (comparador doble, colector abierto).
 - **D2** = TL431 en configuración shunt: ánodo a GND, cátodo y referencia unidos al nodo `VREF`.
 - **R11** = 1k5 de +5 V a `VREF` (polarización del TL431, ≈ 1,7 mA).
-- Divisor de muestra: **R6 = 10 kΩ** de +5 V al nodo `VSENSE`, **R7 = 12 kΩ** de `VSENSE` a GND.
+- Divisor de muestra: **R6 = 10 kΩ** de +5 V al nodo `VSENSE`, **R7 = trimpot multivuelta de 20 kΩ** de `VSENSE` a GND.
+
+**Por qué R7 es trimpot y no fijo:** con un divisor de resistores del 10 %, el umbral de detección puede irse hasta 5,20 V — por encima del riel sano — y dejar la máquina en reset permanente. El trimpot permite ajustar el umbral real a 4,54 V durante la prueba (paso 8), absorbiendo la tolerancia de R6, del TL431 y del propio divisor.
 - `VSENSE` → entrada **no inversora** (U8 pin 3).
 - `VREF` → entrada **inversora** (U8 pin 2).
 - **R12** = 10 kΩ de la salida (U8 pin 1) a +5 V — el colector abierto lo necesita.
@@ -235,7 +237,7 @@ Todos los demás pines de J1 y J2 quedan **sin conectar** en esta tarjeta.
 | 1 | LM393 |
 | 1 | TL431 |
 | 1 | Resistor 1k5 |
-| 1 | Resistor 12 kΩ |
+| 1 | Trimpot multivuelta 20 kΩ (umbral de caída de tensión) |
 | 1 | Resistor 470 kΩ (histéresis) |
 | 7 | Zócalo DIP (6 × 14–20 pines, 2 × 8 pines) |
 | 7 | Capacitor cerámico 100 nF (desacople, uno por chip) |
@@ -279,7 +281,7 @@ Ejecutar **antes** de conectar la tarjeta al backplane.
 
 **Paso 7 — Reset.** `RESET_n` debe estar en bajo unos 100 ms al encender y luego pasar a alto. El pulsador debe llevarlo a bajo mientras se mantiene apretado.
 
-**Paso 8 — Caída de tensión.** Bajar lentamente la tensión de la fuente desde 5,0 V. `RESET_n` debe activarse en torno a 4,54 V y mantenerse activo por debajo. Volver a subir: debe liberarse cerca de 4,64 V, sin oscilar. Si en la transición aparecen múltiples resets, falta o está mal el resistor de histéresis. Si el reset nunca se libera, revisar la polaridad de las entradas del comparador.
+**Paso 8 — Caída de tensión: ajustar y verificar.** Primero el ajuste: fijar la fuente en 4,54 V y girar el trimpot R7 hasta el punto exacto en que `RESET_n` conmuta a bajo. Devolver la fuente a 5,0 V y verificar que el reset se libera. Después la verificación: bajar lentamente la tensión desde 5,0 V — `RESET_n` debe activarse en torno a 4,54 V y mantenerse activo por debajo. Volver a subir: debe liberarse cerca de 4,64 V, sin oscilar. Si en la transición aparecen múltiples resets, falta o está mal el resistor de histéresis. Si el reset nunca se libera, revisar la polaridad de las entradas del comparador.
 
 **Paso 9 — Flancos.** Con el analizador en el rango rápido, verificar que `CLK` y `CLK_n` sean complementarios y sin escalones ni rebotes en las transiciones.
 
