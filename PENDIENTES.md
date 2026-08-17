@@ -135,13 +135,9 @@ Los ítems 2, 4 y 5 originales lo citaban, pero nunca entró al repo. Su conteni
 
 ---
 
-### [~] 19. Validar la reconstrucción del ISA — PARCIAL
+### [x] 19. Validar la reconstrucción del ISA
 
-`01-isa-spec.md` se reconstruyó tras perderse el original.
-
-**Validado (16-ago-2026):** los 12 puntos de decisión del §11 — incluida la elección explícita de **SLT con signo** (contra la alternativa sin signo, con el costo de la lógica `N ⊕ V` en la ALU), base PC+1, BEQ/BNE pisan banderas, subcampo de sistema, contador de 3 bits.
-
-**Queda pendiente:** la lectura ciclo por ciclo de las secuencias de microcódigo de §6.3 (salvo R-type, que ya estaba respaldada). Hasta esa lectura, §6.3 mantiene su marca `[PROPUESTO — validar]` y el documento es normativo salvo esa sección.
+**Resuelto (16-ago-2026):** validación completa en dos pasadas. Primera: los 12 puntos de decisión — incluida la elección explícita de **SLT con signo** (lógica `N ⊕ V` en la ALU), base PC+1, BEQ/BNE pisan banderas, subcampo de sistema, contador de 3 bits. Segunda: las secuencias de microcódigo de §6.3 ciclo por ciclo, por grupos. En la revisión surgió y se decidió la **restricción `rd ≠ rs` en JALR** (el enlace pisa la fuente; el ensamblador lo rechaza). `01-isa-spec.md` es **v0.3, NORMATIVO completo**, registro en su §11.
 
 ---
 

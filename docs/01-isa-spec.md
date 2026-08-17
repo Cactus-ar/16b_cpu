@@ -1,8 +1,8 @@
 # CPU 16 bits — Especificación del ISA y microcódigo
 
-**Versión 0.2 — normativo, salvo §6.3** · Ante conflicto con otros documentos, este tiene precedencia.
+**Versión 0.3 — NORMATIVO** · Ante conflicto con otros documentos, este tiene precedencia.
 
-> **Nota sobre esta versión.** El documento original del ISA se perdió antes de entrar al repositorio. Esta versión se reconstruyó en agosto de 2026 a partir de: las correcciones registradas en `PENDIENTES.md` (que citan la versión buena), la tabla de instrucciones del `README.md`, y las señales de control definidas en `00-bus-spec.md`. Las decisiones de diseño derivadas de nuevo fueron **validadas por el autor el 16-ago-2026** (registro en §11). La única parte todavía no validada son las secuencias de microcódigo de §6.3, marcadas `[PROPUESTO — validar]`.
+> **Nota sobre esta versión.** El documento original del ISA se perdió antes de entrar al repositorio. Esta versión se reconstruyó en agosto de 2026 a partir de: las correcciones registradas en `PENDIENTES.md` (que citan la versión buena), la tabla de instrucciones del `README.md`, y las señales de control definidas en `00-bus-spec.md`. Todo el contenido — decisiones de diseño y secuencias de microcódigo — fue **validado por el autor el 16-ago-2026** (registro en §11).
 
 ---
 
@@ -123,9 +123,9 @@ T0:  PC_AOUT_n + ROM_OUT_n + IR_LD + PC_INC
 
 En T0 la tarjeta de control también evalúa la condición de interrupción (§7): si corresponde atender, en lugar del fetch se ejecuta la secuencia de atención.
 
-### 6.3 Secuencias por instrucción `[PROPUESTO — validar]`
+### 6.3 Secuencias por instrucción
 
-Las secuencias completas se derivaron de nuevo para esta reconstrucción. La de R-type coincide con la registrada en `00-bus-spec.md` §3b (renumerada T1–T3, ítem 10 de PENDIENTES); las demás son derivación nueva.
+Las secuencias completas se derivaron de nuevo para esta reconstrucción y fueron **validadas ciclo por ciclo por el autor (16-ago-2026)**. La de R-type coincide además con la registrada en `00-bus-spec.md` §3b (renumerada T1–T3, ítem 10 de PENDIENTES).
 
 **R-type** — `RSA=rs, RSB=rt, RSW=rd`
 
@@ -198,6 +198,8 @@ T3:  ALU_OUT_n + REG_WE + FLAGS_LD       ; rd ← rd | imm8, banderas
 T1:  PC_OUT_n + REG_WE                   ; rd ← PC+1 (dirección de retorno)
 T2:  RA_OUT_n + PC_LD                    ; PC ← rs
 ```
+
+> **Restricción: `rd ≠ rs`.** El enlace se escribe en T1, antes de leer la fuente en T2: con `rd = rs` el salto termina en `PC+1` (fall-through) porque el enlace pisa el destino. Es comportamiento definido pero inútil; **el ensamblador debe rechazarlo**. Se decidió no gastar un temporal y un ciclo extra en un caso sin uso práctico (decisión del autor, ago 2026).
 
 **JMP** — IMM_SEL=10, ALU=ADD
 
@@ -318,6 +320,7 @@ Hasta que se implemente, **ejecutar `1111` es comportamiento indefinido**. El en
 11. Pseudo-instrucciones CLR y JR (§8).
 12. Desglose de los 14 bits de dirección de la ROM de control: borrador aceptado, se fija al escribir `modulos/09-control.md` (§10).
 
-**Pendiente de validación:**
+13. Las secuencias de microcódigo de §6.3, completas, revisadas por grupos (aritmética, memoria, saltos, saltos indirectos y E/S) con sus puntos finos: ORI destructiva por puerto A, LUI sin banderas, SW por puerto B, decisión de salto sobre Z registrada un ciclo después de FLAGS_LD.
+14. **Restricción `rd ≠ rs` en JALR** — decisión explícita del autor: definido pero inútil (cae al fall-through), el ensamblador lo rechaza; no se gasta hardware en el caso.
 
-- Las secuencias de microcódigo de §6.3, salvo la R-type (respaldada por `00-bus-spec.md` §3b). Requieren lectura ciclo por ciclo del autor: verificar operandos, orden y señales de cada instrucción contra la intención original del diseño.
+No queda contenido pendiente de validación.
