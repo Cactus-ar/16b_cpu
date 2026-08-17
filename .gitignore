@@ -1,0 +1,9 @@
+# Historia local de VS Code (extensión Local History)
+.history/
+
+# KiCad — archivos temporales y derivados
+*.lck
+~*.kicad_*
+*-backups/
+_autosave-*
+fp-info-cache
