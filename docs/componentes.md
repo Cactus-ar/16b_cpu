@@ -27,12 +27,15 @@ Toda la memoria del proyecto usa esa única huella. Ventajas:
 ### Lista
 
 | Uso | Chip | Cant. | Comprar | Estado |
-|---|---|---|---|---|---|
+|---|---|---|---|---|
 | ROM de microcódigo | AT28C256-15PU | 4 | 10 | Por verificar |
 | Generador de inmediatos | AT28C256-15PU | 2 | 5 | Por verificar |
 | Memoria de programa | AT28C256-15PU | 2 | 5 | Por verificar |
 | RAM de datos | AS6C62256-55PCN | 2 | 6 | Por verificar |
-| **Total** | | **10** | **26** | |
+| **Banco de registros** | AS6C62256-55PCN | 4 | 8 | Por verificar |
+| **Total** | | **14** | **34** | |
+
+**Por qué el banco de registros lleva 4 SRAM:** el diseño usa dos copias idénticas que escriben siempre lo mismo, cada una con su propio bus de direcciones — dos puertos de lectura con memoria común (ver README). Con datos de 16 bits y chips de 8, cada copia son dos chips en paralelo: 2 copias × 2 chips = 4. *(Agregado el 16-ago-2026: faltaba en la lista original.)*
 
 > Nota: el generador de inmediatos está actualmente resuelto en compuertas dentro de la tarjeta de control (`01-isa-spec.md` §5); sus dos EEPROM quedan en la lista como reserva por si esa decisión se revisa.
 
@@ -78,6 +81,7 @@ Riesgo bajo: la familia se sigue fabricando activamente en DIP por Texas Instrum
 | 74HC86 | XOR cuádruple | 8 | 15 | Por verificar |
 | 74HC138 | Decodificador 3 a 8 | 6 | 12 | Por verificar |
 | 74HC139 | Decodificador 2 a 4 doble | 3 | 8 | Por verificar |
+| 74HC148 | Codificador de prioridad 8 a 3 — plan B del 74C922 (§4) | 1 | 3 | Por verificar |
 | 74HC153 | Mux 4 a 1 doble | 4 | 8 | Por verificar |
 | 74HC157 | Mux 2 a 1 cuádruple | 8 | 15 | Por verificar |
 | 74HC161 | Contador binario 4 bits | 6 | 12 | Por verificar |
@@ -103,6 +107,13 @@ Las cantidades son estimadas: las tarjetas 3 a 10 todavía no están diseñadas 
 | TLC555 o LMC555 (DIP-8) | 2 | Bajo — versión CMOS del 555 | Por verificar |
 | LM393 (DIP-8) | 1 | Muy bajo | Por verificar |
 | TL431 (TO-92) | 1 | Muy bajo. Alternativas: LM431, KA431 | Por verificar |
+| Trimpot multivuelta 20 kΩ | 1 | Bajo — umbral de caída de tensión (R7) | Por verificar |
+| Potenciómetro 1 MΩ lineal | 1 | Bajo — ajuste de frecuencia | Por verificar |
+| Conmutador rotativo 3 posiciones, 1 polo | 1 | **Medio** — no está en cualquier casa de electrónica; verificar antes del pedido | Por verificar |
+| Llave conmutadora SPDT | 1 | Muy bajo — selección astable/manual | Por verificar |
+| Pulsador momentáneo | 2 | Muy bajo — paso y reset | Por verificar |
+
+*(Electromecánicos agregados el 16-ago-2026: estaban en la BOM de `modulos/01-reloj.md` pero faltaban en esta lista maestra, que es de donde se arma el pedido.)*
 
 **Sobre el TLC555:** si solo se consigue NE555, funciona, pero inyecta un pico de corriente en la alimentación que la versión CMOS no tiene, y da flancos más sucios. Vale la pena insistir con la variante CMOS.
 
@@ -143,7 +154,7 @@ Por eso el PS/2 es el módulo 11, opcional y posterior a la máquina funcionando
 | Zócalo DIP-14 | 60 | | Por verificar |
 | Zócalo DIP-16 | 40 | | Por verificar |
 | Zócalo DIP-20 | 40 | | Por verificar |
-| Zócalo DIP-28 (600 mil) | 15 | Memoria — **verificar el ancho** | Por verificar |
+| Zócalo DIP-28 (600 mil) | 20 | Memoria (14 en diseño + repuestos) — **verificar el ancho** | Por verificar |
 | Guías laterales para tarjeta | 9 | Perfil en U, riel o impresión 3D | Por verificar |
 
 **Las tiras de pines se venden en tiras largas que se cortan a medida.** Comprar tiras de 2×40 y cortarlas sale más barato y flexible que buscar el largo exacto.
@@ -208,7 +219,7 @@ Para los 74HC, la tarjeta de pruebas de bus (módulo 2) sirve como banco de prue
 
 | Prioridad | Qué | Por qué |
 |---|---|---|
-| **1** | Memoria completa (26 chips) | Mayor riesgo de discontinuación; define las huellas |
+| **1** | Memoria completa (34 chips) | Mayor riesgo de discontinuación; define las huellas |
 | **1** | Programador de EEPROM | Necesario para verificar la memoria comprada |
 | **2** | Componentes del módulo 01 | Para empezar a construir ya |
 | **2** | Capacitores 100 nF (200) y zócalos | Uso masivo, nunca sobran |
