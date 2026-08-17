@@ -297,7 +297,7 @@ Hasta que se implemente, **ejecutar `1111` es comportamiento indefinido**. El en
 
 - **ROM de control: 14 bits de dirección** (con `IRQ_n` e `IE` incluidos en la dirección), lo que descarta el 28C64 y lleva a **4 × AT28C256** (32K × 8, 15 bits — un bit de dirección de margen). Coincide con la estandarización de toda la memoria en la huella JEDEC de 28 pines (`componentes.md`).
 - Desglose exacto de los 14 bits de dirección (opcode, contador de microciclo, Z, C, IRQ, IE) — borrador: op(4) + T(3) + funct(3) + Z + C + IRQ + IE = 14. A fijar en `modulos/09-control.md`.
-- Las cuatro EEPROM en paralelo dan hasta 32 señales de control de salida.
+- Las cuatro EEPROM en paralelo dan hasta 32 señales de control de salida. **Ojo:** la cuenta preliminar de señales necesarias da ~33 (23 del backplane + IMM_SEL0/1, fin de instrucción, control de IE, HALT y los selectores de los muxes de RSA/RSB/RSW). Se resuelve al diseñar la tarjeta: compactando señales (p. ej. IE como bit de valor + strobe) o con una **quinta ROM** — la compra de memoria ya contempla unidades de sobra (16-ago-2026).
 - `IMM_SEL0/1` y el contador de microciclo son **internos** de la tarjeta de control; no viajan por el backplane (B22/B23 quedan reservados).
 - El registro de microinstrucción debe resetear a un valor con **todas las habilitaciones de bus inactivas** (son activas en bajo → reset a unos, no a ceros).
 

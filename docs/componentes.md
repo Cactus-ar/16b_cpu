@@ -37,7 +37,7 @@ Toda la memoria del proyecto usa esa única huella. Ventajas:
 
 **Por qué el banco de registros lleva 4 SRAM:** el diseño usa dos copias idénticas que escriben siempre lo mismo, cada una con su propio bus de direcciones — dos puertos de lectura con memoria común (ver README). Con datos de 16 bits y chips de 8, cada copia son dos chips en paralelo: 2 copias × 2 chips = 4. *(Agregado el 16-ago-2026: faltaba en la lista original.)*
 
-> Nota: el generador de inmediatos está actualmente resuelto en compuertas dentro de la tarjeta de control (`01-isa-spec.md` §5); sus dos EEPROM quedan en la lista como reserva por si esa decisión se revisa.
+> Nota: el generador de inmediatos está resuelto en compuertas dentro de la tarjeta de control (`01-isa-spec.md` §5); sus EEPROM quedan en la lista como reserva deliberada (confirmado por el autor, ago 2026): si la zona gris se revisara, los chips ya están — y mientras tanto son repuesto universal, porque toda la memoria del proyecto usa el mismo AT28C256.
 
 Las cantidades a comprar contemplan el descarte por unidades defectuosas, que con proveedores de excedentes es esperable.
 
@@ -81,7 +81,7 @@ Riesgo bajo: la familia se sigue fabricando activamente en DIP por Texas Instrum
 | 74HC86 | XOR cuádruple | 8 | 15 | Por verificar |
 | 74HC138 | Decodificador 3 a 8 | 6 | 12 | Por verificar |
 | 74HC139 | Decodificador 2 a 4 doble | 3 | 8 | Por verificar |
-| 74HC148 | Codificador de prioridad 8 a 3 — plan B del 74C922 (§4) | 1 | 3 | Por verificar |
+| 74HC148 | Codificador de prioridad 8 a 3 — teclado hexadecimal (§4) | 1 | 3 | Por verificar |
 | 74HC153 | Mux 4 a 1 doble | 4 | 8 | Por verificar |
 | 74HC157 | Mux 2 a 1 cuádruple | 8 | 15 | Por verificar |
 | 74HC161 | Contador binario 4 bits | 6 | 12 | Por verificar |
@@ -126,16 +126,16 @@ Las cantidades son estimadas: las tarjetas 3 a 10 todavía no están diseñadas 
 | Componente | Uso | Riesgo | Estado |
 |---|---|---|---|
 | LCD HD44780 16×2 o 20×4 | Salida v1 | Muy bajo — se fabrica masivamente | Por verificar |
-| 74C922 o MM74C922 | Codificador de teclado hexadecimal | **Alto** — obsoleto | Por verificar |
+| ~~74C922 o MM74C922~~ | Codificador de teclado hexadecimal | — | **Descartado** (ago 2026) — ver nota |
 | Teclado matricial 4×4 | Entrada v1 | Muy bajo | Por verificar |
 | ADC0804 o ADC0808 | Joystick analógico (futuro) | Medio | Por verificar |
 | Teclado PS/2 | Entrada v2 | **Alto** — ver nota | Por verificar |
 
-### Nota sobre el 74C922
+### Nota sobre el 74C922 — descartado
 
-Está descontinuado hace tiempo y solo se consigue en excedentes. **Si no aparece, se construye con lógica discreta:** un 74HC161 para barrer las filas, un 74HC148 codificador de prioridad para las columnas, y un 74HC74 más un RC para el antirrebote. Unos cuatro chips.
+**Decisión del autor (16-ago-2026): el codificador de teclado se construye con lógica discreta, definitivamente.** Un 74HC161 para barrer las filas, un 74HC148 codificador de prioridad para las columnas, y un 74HC74 más un RC para el antirrebote — unos cuatro chips, todos activos y ya en la lista de la sección 2.
 
-Vale la pena decidir esto antes de diseñar el módulo 10.
+Razones: elimina la única dependencia de un chip obsoleto de excedentes del pedido, y es más fiel al espíritu del proyecto — la lógica queda visible en vez de dentro de un encapsulado discontinuado. El módulo 10 se diseña directamente así.
 
 ### Nota sobre el teclado PS/2
 

@@ -104,7 +104,7 @@ Cada una tiene razones discutidas en detalle. Cambiarlas es posible pero debe se
 
 **Tamaño físico de la tarjeta.** El formato es 100 × 160 mm y la tarjeta de control lleva ~18 integrados. **Conviene hacer el layout de esa tarjeta antes que el de ninguna otra**: si no entrara, habría que cambiar el formato de las nueve.
 
-**El 74C922** (codificador de teclado hexadecimal) está discontinuado. Alternativa: cuatro chips de lógica común.
+**El 74C922** — riesgo cerrado (ago 2026): se descartó definitivamente; el codificador de teclado del módulo 10 se hace con cuatro chips de lógica común (74HC161 + 74HC148 + 74HC74 + RC). Ver `docs/componentes.md` §4.
 
 **El Pong** exige refresco fluido, que un LCD de caracteres no da. Si se mantiene como objetivo, la tarjeta de E/S necesita repensarse hacia matriz de LEDs o LCD gráfico.
 
