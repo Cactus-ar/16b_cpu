@@ -151,6 +151,7 @@ Por eso el PS/2 es el módulo 11, opcional y posterior a la máquina funcionando
 |---|---|---|---|
 | Tira de pines macho 2×28 | 20 | Dos por tarjeta, 9 tarjetas + repuestos | Por verificar |
 | Tira de pines hembra 2×28 | 20 | Para el backplane | Por verificar |
+| Zócalo DIP-8 | 10 | Módulo 01: 2× 555 + LM393 | Por verificar |
 | Zócalo DIP-14 | 60 | | Por verificar |
 | Zócalo DIP-16 | 40 | | Por verificar |
 | Zócalo DIP-20 | 40 | | Por verificar |
