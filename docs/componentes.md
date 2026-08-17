@@ -173,6 +173,7 @@ Por eso el PS/2 es el módulo 11, opcional y posterior a la máquina funcionando
 | Capacitor electrolítico 1000 µF | 2 | Por verificar |
 | Resistores varios ¼ W | Surtido | Por verificar |
 | Redes de resistores 8× 4k7 (bussed) | 10 | Por verificar |
+| Diodo 1N4148 | 20 | Por verificar |
 | LED alta eficiencia | 50 | Por verificar |
 
 **Los 100 nF son el componente más usado del proyecto:** uno por integrado, 130 como mínimo. Comprar 200 de una.
