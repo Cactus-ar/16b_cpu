@@ -102,16 +102,18 @@ Las cantidades son estimadas: las tarjetas 3 a 10 todavía no están diseñadas 
 
 ## 3. Componentes específicos ya definidos (Módulo 01)
 
-| Componente | Cant. | Riesgo | Estado |
-|---|---|---|---|
-| TLC555 o LMC555 (DIP-8) | 2 | Bajo — versión CMOS del 555 | Por verificar |
-| LM393 (DIP-8) | 1 | Muy bajo | Por verificar |
-| TL431 (TO-92) | 1 | Muy bajo. Alternativas: LM431, KA431 | Por verificar |
-| Trimpot multivuelta 20 kΩ | 1 | Bajo — umbral de caída de tensión (R7) | Por verificar |
-| Potenciómetro 1 MΩ lineal | 1 | Bajo — ajuste de frecuencia | Por verificar |
-| Conmutador rotativo 3 posiciones, 1 polo | 1 | **Medio** — no está en cualquier casa de electrónica; verificar antes del pedido | Por verificar |
-| Llave conmutadora SPDT | 1 | Muy bajo — selección astable/manual | Por verificar |
-| Pulsador momentáneo | 2 | Muy bajo — paso y reset | Por verificar |
+| Componente | Cant. | Comprar | Riesgo | Estado |
+|---|---|---|---|---|
+| TLC555 o LMC555 (DIP-8) | 2 | 4 | Bajo — versión CMOS del 555 | Por verificar |
+| LM393 (DIP-8) | 1 | 2 | Muy bajo | Por verificar |
+| TL431 (TO-92) | 1 | 3 | Muy bajo. Alternativas: LM431, KA431 | Por verificar |
+| Trimpot multivuelta 20 kΩ | 1 | 2 | Bajo — umbral de caída de tensión (R7) | Por verificar |
+| Potenciómetro 1 MΩ lineal | 1 | 2 | Bajo — ajuste de frecuencia | Por verificar |
+| Conmutador rotativo 3 posiciones, 1 polo | 1 | 2 | **Medio** — no está en cualquier casa de electrónica; verificar antes del pedido | Por verificar |
+| Llave conmutadora SPDT | 1 | 2 | Muy bajo — selección astable/manual | Por verificar |
+| Pulsador momentáneo | 2 | 4 | Muy bajo — paso y reset | Por verificar |
+
+*(Columna "Comprar" agregada el 16-ago-2026: estos renglones eran los únicos sin redundancia, y un componente muerto acá frena la primera tarjeta. Todos baratos — se duplican.)*
 
 *(Electromecánicos agregados el 16-ago-2026: estaban en la BOM de `modulos/01-reloj.md` pero faltaban en esta lista maestra, que es de donde se arma el pedido.)*
 
