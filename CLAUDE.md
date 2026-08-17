@@ -34,7 +34,7 @@ Esta distinción se discutió explícitamente y guía las decisiones de implemen
 |---|---|
 | Módulo 01 (reloj) | Esquemático terminado y verificado, ERC limpio |
 | Resto de las tarjetas | En diseño, sin esquemático |
-| Spec del ISA | **Reconstruido** (v0.1, ago 2026) — el original se perdió sin entrar al repo. Las marcas `[PROPUESTO — validar]` esperan revisión del autor |
+| Spec del ISA | **Reconstruido y validado** (v0.2, ago 2026) — normativo salvo las secuencias de microcódigo de §6.3, que esperan lectura ciclo por ciclo del autor |
 | Construcción física | No iniciada — esperando componentes |
 | Ensamblador, emulador, microcódigo | No iniciados |
 
@@ -49,7 +49,7 @@ Se leen en este orden. Los tres primeros gobiernan todo lo demás.
 | Documento | Contenido |
 |---|---|
 | `docs/00-bus-spec.md` | Pinout del backplane, formato físico, señales de control |
-| `docs/01-isa-spec.md` | Instrucciones, encoding, microcódigo de cada una — reconstruido, ver marcas `[PROPUESTO — validar]` |
+| `docs/01-isa-spec.md` | Instrucciones, encoding, microcódigo de cada una — normativo salvo §6.3, pendiente de lectura del autor |
 | `docs/02-io-spec.md` | **No existe todavía** — puertos de E/S y periféricos |
 | `docs/03-memoria-spec.md` | **No existe todavía** — mapa de memoria |
 

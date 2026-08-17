@@ -1,8 +1,8 @@
 # CPU 16 bits — Especificación del ISA y microcódigo
 
-**Versión 0.1 — RECONSTRUIDO, pendiente de validación del autor** · Documento normativo una vez validado. Ante conflicto con otros documentos, este tiene precedencia.
+**Versión 0.2 — normativo, salvo §6.3** · Ante conflicto con otros documentos, este tiene precedencia.
 
-> **Nota sobre esta versión.** El documento original del ISA se perdió antes de entrar al repositorio. Esta versión se reconstruyó en agosto de 2026 a partir de: las correcciones registradas en `PENDIENTES.md` (que citan la versión buena), la tabla de instrucciones del `README.md`, y las señales de control definidas en `00-bus-spec.md`. Todo lo que tiene respaldo en esos registros va sin marca. Lo derivado de nuevo lleva la marca **`[PROPUESTO — validar]`** y no es normativo hasta que el autor lo confirme.
+> **Nota sobre esta versión.** El documento original del ISA se perdió antes de entrar al repositorio. Esta versión se reconstruyó en agosto de 2026 a partir de: las correcciones registradas en `PENDIENTES.md` (que citan la versión buena), la tabla de instrucciones del `README.md`, y las señales de control definidas en `00-bus-spec.md`. Las decisiones de diseño derivadas de nuevo fueron **validadas por el autor el 16-ago-2026** (registro en §11). La única parte todavía no validada son las secuencias de microcódigo de §6.3, marcadas `[PROPUESTO — validar]`.
 
 ---
 
@@ -57,15 +57,15 @@ J:  op[15:12] · imm12[11:0]
 
 Notas:
 
-- En los saltos relativos (`BEQ`, `BNE`, `JMP`), la base es **PC+1** — el PC ya incrementado tras el fetch. El desplazamiento se cuenta desde la instrucción *siguiente*. `[PROPUESTO — validar]` (consecuencia directa de incrementar el PC durante T0, pero la convención exacta no quedó registrada).
+- En los saltos relativos (`BEQ`, `BNE`, `JMP`), la base es **PC+1** — el PC ya incrementado tras el fetch. El desplazamiento se cuenta desde la instrucción *siguiente*. (Validado por el autor, ago 2026.)
 - `OUT` usa el campo `rd` del formato L como **fuente**; el nombre del campo indica posición, no dirección de datos.
-- `HALT` y las instrucciones de sistema codifican en cero todos los bits no usados. `[PROPUESTO — validar]`
+- `HALT` y las instrucciones de sistema codifican en cero todos los bits no usados. (Validado.)
 
 ---
 
 ## 4. R-type: campo `funct`
 
-Los 3 bits de `funct` van **directo** al selector de la ALU, sin traducción intermedia. Eso elimina un decodificador entero. El orden de la tabla sigue el listado del README; la asignación numérica exacta es `[PROPUESTO — validar]`:
+Los 3 bits de `funct` van **directo** al selector de la ALU, sin traducción intermedia. Eso elimina un decodificador entero. El orden de la tabla sigue el listado del README; la asignación numérica exacta quedó validada por el autor (ago 2026):
 
 | funct | Op | Operación | Z | C |
 |---|---|---|---|---|
@@ -76,11 +76,12 @@ Los 3 bits de `funct` van **directo** al selector de la ALU, sin traducción int
 | `100` | XOR | `rd ← rs ^ rt` | ✓ | 0 |
 | `101` | SHL | `rd ← rs << 1` | ✓ | bit 15 expulsado |
 | `110` | SHR | `rd ← rs >> 1` (lógico) | ✓ | bit 0 expulsado |
-| `111` | SLT | `rd ← (rs < rt) ? 1 : 0` — **sin signo** | ✓ | 0 |
+| `111` | SLT | `rd ← (rs < rt) ? 1 : 0` — **con signo** | ✓ | 0 |
 
-Semántica de banderas y detalles `[PROPUESTO — validar]`:
+Semántica de banderas y detalles (validados por el autor, ago 2026):
 
-- **SLT compara sin signo.** Razón: la comparación sin signo sale gratis del *borrow* del restador (74HC283); la comparación con signo exigiría una bandera de overflow que la máquina no tiene. Para comparar con signo, el idioma es restar y ramificar sobre el resultado.
+- **SLT compara con signo.** Decisión del autor: como los únicos saltos condicionales son `BEQ`/`BNE`, SLT es el primitivo de comparación de la máquina, y la aritmética de programas normales es con signo. Costo en hardware: el resultado es `N ⊕ V` sobre la resta interna — el signo del resultado corregido por overflow. La detección de overflow para la resta es `V = (s_rs ⊕ s_rt) ∧ (s_rs ⊕ s_resultado)`: dos XOR y un AND sobre bits de signo, que caben en el 74HC86 ya inventariado en la tarjeta de la ALU.
+- **Comparación sin signo por software**, con el idiom de invertir el bit de signo: `sin_signo(a < b) = SLT(a ^ 0x8000, b ^ 0x8000)`. El ensamblador puede ofrecerlo como pseudo-secuencia.
 - **Los corrimientos son de un bit por instrucción.** Corrimientos múltiples se hacen en bucle, o en el futuro con el prefijo de expansión (§9). El campo `rt` se ignora en SHL/SHR y se codifica en cero.
 - El `funct` ocupa `ALU_OP[2:0]` del backplane. **`ALU_OP3` queda reservado** (posibles usos futuros: acarreo de entrada para suma extendida, operaciones adicionales). Las instrucciones no R-type que usan la ALU (`ADDI`, `ORI`, cálculo de direcciones, saltos) reciben su operación desde la ROM de control por las mismas líneas.
 
@@ -108,8 +109,8 @@ El generador de inmediatos vive en la **tarjeta de control** (junto con el IR); 
 - Las señales son las de `00-bus-spec.md`. Las cargas (`*_LD`, `REG_WE`) ocurren en el flanco de subida de CLK; las habilitaciones de salida (`*_OUT_n`) son por nivel.
 - **En cada microciclo hay exactamente un emisor sobre el bus de datos.**
 - `RSA`, `RSB` y `RSW` (selección de registros) las emite la tarjeta de control derivándolas de los campos del IR; qué campo va a qué puerto depende de la instrucción y se anota en cada secuencia.
-- El contador de microciclo es interno de la tarjeta de control. **T0 es el fetch**, común a todas las instrucciones; el microcódigo de cada instrucción empieza en T1. La secuencia más larga (salto tomado) llega a T6: **8 estados, contador de 3 bits, con margen.** `[PROPUESTO — validar]`
-- Una salida de la ROM de control marca **fin de instrucción** y reinicia el contador a T0. Es lo que permite que cada instrucción dure distinto. `[PROPUESTO — validar]`
+- El contador de microciclo es interno de la tarjeta de control. **T0 es el fetch**, común a todas las instrucciones; el microcódigo de cada instrucción empieza en T1. La secuencia más larga (salto tomado) llega a T6: **8 estados, contador de 3 bits, con margen.**
+- Una salida de la ROM de control marca **fin de instrucción** y reinicia el contador a T0. Es lo que permite que cada instrucción dure distinto. (Ambos puntos validados por el autor, ago 2026.)
 
 ### 6.2 Fetch — T0, común a todas
 
@@ -226,7 +227,7 @@ T2:  RA_OUT_n  + IO_LD                   ; puerto[MAR] ← rd
 T1:  HALT                                ; la tarjeta de control tira HALT_n a masa
 ```
 
-La tarjeta de reloj detiene CLK en bajo, sincrónicamente (ver `modulos/01-reloj.md`). El PC queda apuntando a la instrucción siguiente. La máquina se reanuda por pulso manual o reset. `[PROPUESTO — validar]`
+La tarjeta de reloj detiene CLK en bajo, sincrónicamente (ver `modulos/01-reloj.md`). El PC queda apuntando a la instrucción siguiente. La máquina se reanuda por pulso manual o reset. (Validado.)
 
 ---
 
@@ -236,7 +237,7 @@ Decidido para la v1: el costo real es un flip-flop y dos bits más en la ROM; po
 
 ### Hardware
 
-- **`IRQ_n`** (J2-A8): línea de solicitud, activa en bajo, nivel. Colector abierto con pull-up si llega a haber más de una fuente. `[PROPUESTO — validar]`
+- **`IRQ_n`** (J2-A8): línea de solicitud, activa en bajo, nivel. Colector abierto con pull-up si llega a haber más de una fuente. (Validado.)
 - **`IE`**: flip-flop de habilitación en la tarjeta de control. **Arranca en 0 tras reset** — el código debe ejecutar `EI` explícitamente cuando está listo para atender.
 - La dirección del vector la emite el generador de inmediatos como constante. **El valor del vector queda pendiente de `03-memoria-spec.md`.**
 
@@ -253,7 +254,7 @@ Mismo camino de datos que `JALR`: no se agrega hardware, solo microcódigo. `IE 
 
 ### Instrucciones de sistema — opcode `1101`
 
-El subcampo va en los bits [2:0] (la posición del `funct`); los bits [11:3] en cero. Codificación `[PROPUESTO — validar]`:
+El subcampo va en los bits [2:0] (la posición del `funct`); los bits [11:3] en cero. Codificación validada por el autor (ago 2026):
 
 | Bits [2:0] | Instrucción | Operación | Microcódigo |
 |---|---|---|---|
@@ -274,9 +275,9 @@ Las traduce el ensamblador; el hardware no las conoce.
 |---|---|---|
 | `NOP` | `ADDI R0, R0, 0` | R0 absorbe la escritura |
 | `MOV rd, rs` | `ADDI rd, rs, 0` | |
-| `CLR rd` | `ADDI rd, R0, 0` | `[PROPUESTO — validar]` |
+| `CLR rd` | `ADDI rd, R0, 0` | Validado |
 | `LI rd, const16` | `LUI rd, hi8` + `ORI rd, lo8` | La razón del rediseño del formato L |
-| `JR rs` | `JALR R0, rs` | Salto sin enlace `[PROPUESTO — validar]` |
+| `JR rs` | `JALR R0, rs` | Salto sin enlace. Validado |
 
 ---
 
@@ -293,26 +294,30 @@ Hasta que se implemente, **ejecutar `1111` es comportamiento indefinido**. El en
 *Este apéndice es temporal: su lugar definitivo es `modulos/09-control.md` cuando ese documento se escriba. Se registra acá para no perderlo de nuevo.*
 
 - **ROM de control: 14 bits de dirección** (con `IRQ_n` e `IE` incluidos en la dirección), lo que descarta el 28C64 y lleva a **4 × AT28C256** (32K × 8, 15 bits — un bit de dirección de margen). Coincide con la estandarización de toda la memoria en la huella JEDEC de 28 pines (`componentes.md`).
-- Desglose exacto de los 14 bits de dirección (opcode, contador de microciclo, Z, C, IRQ, IE) — `[PROPUESTO — validar]`: op(4) + T(3) + funct(3) + Z + C + IRQ + IE = 14. A fijar en `modulos/09-control.md`.
+- Desglose exacto de los 14 bits de dirección (opcode, contador de microciclo, Z, C, IRQ, IE) — borrador: op(4) + T(3) + funct(3) + Z + C + IRQ + IE = 14. A fijar en `modulos/09-control.md`.
 - Las cuatro EEPROM en paralelo dan hasta 32 señales de control de salida.
 - `IMM_SEL0/1` y el contador de microciclo son **internos** de la tarjeta de control; no viajan por el backplane (B22/B23 quedan reservados).
 - El registro de microinstrucción debe resetear a un valor con **todas las habilitaciones de bus inactivas** (son activas en bajo → reset a unos, no a ceros).
 
 ---
 
-## 11. Marcas pendientes de validación
+## 11. Registro de validación
 
-Resumen de todo lo `[PROPUESTO — validar]` en este documento, para revisión en una sola pasada:
+**Validado por el autor el 16-ago-2026:**
 
 1. Base de los saltos relativos: PC+1 (§3).
-2. Bits no usados codificados en cero en HALT/sistema/SHL/SHR/formato L (§3, §4).
+2. Bits no usados codificados en cero (§3, §4).
 3. Asignación numérica del campo `funct` (§4).
-4. Semántica de C por operación; SLT sin signo; corrimientos de a un bit (§4).
-5. Todas las secuencias de microcódigo de §6.3 salvo la R-type (que está respaldada por `00-bus-spec.md` §3b).
+4. Semántica de C por operación; corrimientos de a un bit (§4).
+5. **SLT con signo** — decisión explícita del autor, contra la alternativa sin signo. Implica la lógica `N ⊕ V` en la tarjeta de la ALU (§4).
 6. Contador de microciclo de 3 bits y señal de fin de instrucción (§6.1).
-7. BEQ/BNE modifican banderas (§6.3).
+7. BEQ/BNE modifican banderas — efecto colateral aceptado a cambio de no llevar Z combinacional a la ROM de control (§6.3).
 8. Semántica de reanudación tras HALT (§6.3).
 9. `IRQ_n` por nivel / colector abierto (§7).
-10. Codificación del subcampo de sistema (§7).
+10. Codificación del subcampo de sistema: 000=EI, 001=DI, 010=RETI (§7).
 11. Pseudo-instrucciones CLR y JR (§8).
-12. Desglose de los 14 bits de dirección de la ROM de control (§10).
+12. Desglose de los 14 bits de dirección de la ROM de control: borrador aceptado, se fija al escribir `modulos/09-control.md` (§10).
+
+**Pendiente de validación:**
+
+- Las secuencias de microcódigo de §6.3, salvo la R-type (respaldada por `00-bus-spec.md` §3b). Requieren lectura ciclo por ciclo del autor: verificar operandos, orden y señales de cada instrucción contra la intención original del diseño.

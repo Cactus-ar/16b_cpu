@@ -134,9 +134,13 @@ Los ítems 2, 4 y 5 originales lo citaban, pero nunca entró al repo. Su conteni
 
 ---
 
-### [ ] 19. Validar la reconstrucción del ISA *(nuevo, 16-ago-2026)*
+### [~] 19. Validar la reconstrucción del ISA — PARCIAL
 
-`01-isa-spec.md` se reconstruyó tras perderse el original. Todo lo derivado sin registro previo lleva la marca `[PROPUESTO — validar]`; el §11 del propio documento las lista para revisarlas en una sola pasada (12 puntos: secuencias de microcódigo, asignación de `funct`, semántica de banderas, base PC+1 de los saltos, subcampo de sistema, etc.). Hasta esa revisión, las partes marcadas no son normativas.
+`01-isa-spec.md` se reconstruyó tras perderse el original.
+
+**Validado (16-ago-2026):** los 12 puntos de decisión del §11 — incluida la elección explícita de **SLT con signo** (contra la alternativa sin signo, con el costo de la lógica `N ⊕ V` en la ALU), base PC+1, BEQ/BNE pisan banderas, subcampo de sistema, contador de 3 bits.
+
+**Queda pendiente:** la lectura ciclo por ciclo de las secuencias de microcódigo de §6.3 (salvo R-type, que ya estaba respaldada). Hasta esa lectura, §6.3 mantiene su marca `[PROPUESTO — validar]` y el documento es normativo salvo esa sección.
 
 ---
 
