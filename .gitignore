@@ -14,3 +14,4 @@ tools/build/
 *.vcxproj.user
 tools/tests/*.bin
 tools/tests/*.lst
+tools/tests/*.log

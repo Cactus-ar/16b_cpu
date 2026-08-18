@@ -6,6 +6,9 @@
 //   --steps N         maximo de instrucciones (defecto 10 millones)
 //   --irq-at N        activa IRQ_n al llegar al ciclo N (una vez)
 //   --dump-data A N   al terminar, vuelca N palabras de datos desde A
+//   --log ARCHIVO     traza, estado final y volcados van al archivo en vez
+//                     de stdout; la consola del programa (puerto 0) queda
+//                     en pantalla y los avisos en stderr
 //
 // Fiel al ISA v0.3 hasta en los detalles feos: R0 clavado en cero, BEQ/BNE
 // pisan Z y C, JALR con rd=rs cae al fall-through (con aviso), SLT con signo,
@@ -27,6 +30,8 @@
 #include <fstream>
 
 using namespace isa16;
+
+static FILE* g_out = stdout;   // destino de traza/estado (--log lo redirige)
 
 struct Machine {
     uint16_t R[8] = {0};
@@ -106,13 +111,13 @@ static bool step(Machine& m, bool trace) {
         m.IE = false;
         m.irqLine = false;         // el periferico emulado suelta la linea al ser atendido
         m.cycles += CYC_IRQ;
-        if (trace) printf("        --- IRQ atendida: R7=0x%04X, PC=0x%04X, IE=0\n", m.R[7], m.PC);
+        if (trace) fprintf(g_out, "        --- IRQ atendida: R7=0x%04X, PC=0x%04X, IE=0\n", m.R[7], m.PC);
     }
 
     checkEepromRead(m, m.PC, "fetch en");
     uint16_t w = m.prog[m.PC];
     uint16_t pc1 = (uint16_t)(m.PC + 1);   // "PC+1": base de saltos y enlace
-    if (trace) printf("%6llu  %04X  %04X  %s\n", m.instrs, m.PC, w, dis(w).c_str());
+    if (trace) fprintf(g_out, "%6llu  %04X  %04X  %s\n", m.instrs, m.PC, w, dis(w).c_str());
 
     unsigned rd = f_rd(w), rs = f_rs(w);
     m.PC = pc1;
@@ -256,10 +261,14 @@ int main(int argc, char** argv) {
         else if (a == "--steps"   && i + 1 < argc) maxSteps = strtoull(argv[++i], nullptr, 0);
         else if (a == "--irq-at"  && i + 1 < argc) { irqAt = strtoull(argv[++i], nullptr, 0); haveIrq = true; }
         else if (a == "--dump-data" && i + 2 < argc) { dumpA = strtol(argv[++i], nullptr, 0); dumpN = strtol(argv[++i], nullptr, 0); }
+        else if (a == "--log" && i + 1 < argc) {
+            g_out = fopen(argv[++i], "w");
+            if (!g_out) { fprintf(stderr, "no puedo crear %s\n", argv[i]); return 1; }
+        }
         else if (a[0] == '-') { fprintf(stderr, "opcion desconocida %s\n", a.c_str()); return 1; }
         else { if (!loadBin(m, a)) return 1; loaded = true; }
     }
-    if (!loaded) { fprintf(stderr, "uso: emu16 prog.bin [prog2.bin@0x8000] [--trace] [--steps N] [--irq-at C] [--dump-data A N]\n"); return 1; }
+    if (!loaded) { fprintf(stderr, "uso: emu16 prog.bin [prog2.bin@0x8000] [--trace] [--steps N] [--irq-at C] [--dump-data A N] [--log ARCHIVO]\n"); return 1; }
 
     while (!m.halted && m.instrs < maxSteps) {
         if (haveIrq && m.cycles >= irqAt) { m.irqLine = true; haveIrq = false; }
@@ -267,17 +276,18 @@ int main(int argc, char** argv) {
     }
 
     double secs = (double)m.cycles / (double)F_MAX_HZ;
-    printf("\n--- estado final ---\n");
-    for (int i = 0; i < 8; i++) printf("R%d=0x%04X%s", i, m.R[i], i == 3 ? "\n" : "  ");
-    printf("\nPC=0x%04X  Z=%d C=%d IE=%d  %s\n", m.PC, m.Z, m.C, m.IE, m.halted ? "HALT" : "(limite de pasos)");
-    printf("%llu instrucciones, %llu ciclos = %.3f s a 480 kHz\n", m.instrs, m.cycles, secs);
+    fprintf(g_out, "\n--- estado final ---\n");
+    for (int i = 0; i < 8; i++) fprintf(g_out, "R%d=0x%04X%s", i, m.R[i], i == 3 ? "\n" : "  ");
+    fprintf(g_out, "\nPC=0x%04X  Z=%d C=%d IE=%d  %s\n", m.PC, m.Z, m.C, m.IE, m.halted ? "HALT" : "(limite de pasos)");
+    fprintf(g_out, "%llu instrucciones, %llu ciclos = %.3f s a 480 kHz\n", m.instrs, m.cycles, secs);
     if (dumpA >= 0) {
-        printf("--- datos [0x%04lX..0x%04lX] ---\n", dumpA, dumpA + dumpN - 1);
+        fprintf(g_out, "--- datos [0x%04lX..0x%04lX] ---\n", dumpA, dumpA + dumpN - 1);
         for (long i = 0; i < dumpN; i++) {
-            if (i % 8 == 0) printf("%04lX:", dumpA + i);
-            printf(" %04X", m.data[(uint16_t)(dumpA + i)]);
+            if (i % 8 == 0) fprintf(g_out, "%04lX:", dumpA + i);
+            fprintf(g_out, " %04X", m.data[(uint16_t)(dumpA + i)]);
             if (i % 8 == 7 || i == dumpN - 1) printf("\n");
         }
     }
+    if (g_out != stdout) fclose(g_out);
     return m.halted ? 0 : 2;
 }
