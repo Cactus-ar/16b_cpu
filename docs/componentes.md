@@ -30,10 +30,12 @@ Toda la memoria del proyecto usa esa única huella. Ventajas:
 |---|---|---|---|---|
 | ROM de microcódigo | AT28C256-15PU | 4 | 10 | Por verificar |
 | Generador de inmediatos | AT28C256-15PU | 2 | 5 | Por verificar |
-| Memoria de programa | AT28C256-15PU | 2 | 5 | Por verificar |
+| Memoria de programa | AT28C256-15PU | 4 | 5 | Por verificar |
 | RAM de datos | AS6C62256-55PCN | 2 | 6 | Por verificar |
 | **Banco de registros** | AS6C62256-55PCN | 4 | 8 | Por verificar |
-| **Total** | | **14** | **34** | |
+| **Total** | | **16** | **34** | |
+
+> La memoria de programa pasó de 2 a 4 chips el 18-ago-2026: los dos bancos (monitor + usuario) van poblados desde la v1 por requisito de `SWP` (`03-memoria-spec.md` §2). La compra no cambia: el margen del pedido lo absorbe (5 compradas para 4 en diseño, más la reserva del generador como respaldo del mismo chip).
 
 **Por qué el banco de registros lleva 4 SRAM:** el diseño usa dos copias idénticas que escriben siempre lo mismo, cada una con su propio bus de direcciones — dos puertos de lectura con memoria común (ver README). Con datos de 16 bits y chips de 8, cada copia son dos chips en paralelo: 2 copias × 2 chips = 4. *(Agregado el 16-ago-2026: faltaba en la lista original.)*
 

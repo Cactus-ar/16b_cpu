@@ -171,7 +171,7 @@ T3:  ALU_OUT_n + MAR_LD                  ; MAR ← rs + imm
 T4:  RB_OUT_n  + PROG_WE_n               ; prog[MAR] ← rd (leído por puerto B)
 ```
 
-Idéntica a `SW` salvo la señal de escritura: `PROG_WE_n` en vez de `RAM_WE_n`. Es la instrucción con la que el monitor carga programas. **El software debe esperar ≥10 ms tras cada `SWP`** (ciclo de escritura interno de la EEPROM) — ver `03-memoria-spec.md` §6.
+Idéntica a `SW` salvo la señal de escritura: `PROG_WE_n` en vez de `RAM_WE_n`. Es la instrucción con la que el monitor carga programas. Dos restricciones normativas (ver `03-memoria-spec.md` §6): **solo hacia el banco que no se está ejecutando** (la EEPROM entera queda ilegible durante su ciclo interno de escritura), y **esperar ≥10 ms tras cada `SWP`** antes del siguiente o de saltar a lo escrito.
 
 **BEQ / BNE** — `RSA=rd, RSB=rs`, ALU=SUB, IMM_SEL=00
 
@@ -338,5 +338,6 @@ Hasta que se implemente, **ejecutar `1111` es comportamiento indefinido**. El en
 
 15. **`SWP` en el opcode `1110`** — el último libre, gastado a propósito: habilita cargar y guardar programas en la máquina, el objetivo central del proyecto. El prefijo `1111` queda para toda expansión futura.
 16. Vector de interrupción = `0x0004`.
+17. **Dos bancos de programa en v1** (monitor A15=0, usuario A15=1 desde `0x8000`): requisito funcional de `SWP` — la EEPROM en ciclo de escritura no devuelve datos, así que ejecutar y escribir deben ocurrir en chips distintos. Detectado al modelar `SWP` para el emulador; corrige el borrador del mapa del mismo día.
 
 No queda contenido pendiente de validación.
