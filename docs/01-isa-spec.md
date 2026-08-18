@@ -52,7 +52,7 @@ J:  op[15:12] · imm12[11:0]
 | `1011` | `OUT rd, puerto` | L | `puerto[imm8] ← rd` |
 | `1100` | `HALT` | — | Detiene el reloj vía `HALT_n` |
 | `1101` | Sistema | — | `EI` / `DI` / `RETI` según subcampo (§7) |
-| `1110` | — | — | **Libre** |
+| `1110` | `SWP rd, imm(rs)` | I | `prog[rs + sext(imm6)] ← rd` — escribe memoria de **programa** |
 | `1111` | — | — | **Prefijo de expansión — reservado** (§9) |
 
 Notas:
@@ -162,6 +162,17 @@ T3:  ALU_OUT_n + MAR_LD                  ; MAR ← rs + imm
 T4:  RB_OUT_n  + RAM_WE_n                ; mem[MAR] ← rd (leído por puerto B)
 ```
 
+**SWP** — `RSA=rs, RSB=rd`, ALU=ADD, IMM_SEL=00 *(agregada el 18-ago-2026, decisión del autor — ver `03-memoria-spec.md` §6)*
+
+```
+T1:  RA_OUT_n  + TMPA_LD                 ; TMPA ← rs
+T2:  IMM_OUT_n + TMPB_LD                 ; TMPB ← sext(imm6)
+T3:  ALU_OUT_n + MAR_LD                  ; MAR ← rs + imm
+T4:  RB_OUT_n  + PROG_WE_n               ; prog[MAR] ← rd (leído por puerto B)
+```
+
+Idéntica a `SW` salvo la señal de escritura: `PROG_WE_n` en vez de `RAM_WE_n`. Es la instrucción con la que el monitor carga programas. **El software debe esperar ≥10 ms tras cada `SWP`** (ciclo de escritura interno de la EEPROM) — ver `03-memoria-spec.md` §6.
+
 **BEQ / BNE** — `RSA=rd, RSB=rs`, ALU=SUB, IMM_SEL=00
 
 ```
@@ -241,7 +252,7 @@ Decidido para la v1: el costo real es un flip-flop y dos bits más en la ROM; po
 
 - **`IRQ_n`** (J2-A8): línea de solicitud, activa en bajo, nivel. Colector abierto con pull-up si llega a haber más de una fuente. (Validado.)
 - **`IE`**: flip-flop de habilitación en la tarjeta de control. **Arranca en 0 tras reset** — el código debe ejecutar `EI` explícitamente cuando está listo para atender.
-- La dirección del vector la emite el generador de inmediatos como constante. **El valor del vector queda pendiente de `03-memoria-spec.md`.**
+- La dirección del vector la emite el generador de inmediatos como constante: **`0x0004`** (`IRQ_VECTOR`, fijado en `03-memoria-spec.md` §3 — dirección baja porque es la constante más barata de generar y verificar).
 
 ### Secuencia de atención
 
@@ -322,5 +333,10 @@ Hasta que se implemente, **ejecutar `1111` es comportamiento indefinido**. El en
 
 13. Las secuencias de microcódigo de §6.3, completas, revisadas por grupos (aritmética, memoria, saltos, saltos indirectos y E/S) con sus puntos finos: ORI destructiva por puerto A, LUI sin banderas, SW por puerto B, decisión de salto sobre Z registrada un ciclo después de FLAGS_LD.
 14. **Restricción `rd ≠ rs` en JALR** — decisión explícita del autor: definido pero inútil (cae al fall-through), el ensamblador lo rechaza; no se gasta hardware en el caso.
+
+**Validado por el autor el 18-ago-2026** (junto con `03-memoria-spec.md`):
+
+15. **`SWP` en el opcode `1110`** — el último libre, gastado a propósito: habilita cargar y guardar programas en la máquina, el objetivo central del proyecto. El prefijo `1111` queda para toda expansión futura.
+16. Vector de interrupción = `0x0004`.
 
 No queda contenido pendiente de validación.

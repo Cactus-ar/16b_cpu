@@ -85,7 +85,7 @@ Instrucciones de **ancho fijo de 16 bits**, arquitectura **load/store**. Cuatro 
 | `1011` | `OUT rs, puerto` | puerto ← rs |
 | `1100` | `HALT` | Detiene el reloj |
 | `1101` | Sistema | EI / DI / RETI (interrupciones) |
-| `1110` | — | Libre |
+| `1110` | `SWP rd, imm(rs)` | prog[rs + imm] ← rd (carga de programas) |
 | `1111` | — | Prefijo de expansión (reservado) |
 
 Los 3 bits de `funct` van **directo** al selector de la ALU, sin traducción intermedia. Eso elimina un decodificador entero.

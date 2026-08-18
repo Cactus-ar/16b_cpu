@@ -51,7 +51,7 @@ Se leen en este orden. Los tres primeros gobiernan todo lo demás.
 | `docs/00-bus-spec.md` | Pinout del backplane, formato físico, señales de control |
 | `docs/01-isa-spec.md` | Instrucciones, encoding, microcódigo de cada una |
 | `docs/02-io-spec.md` | **No existe todavía** — puertos de E/S y periféricos |
-| `docs/03-memoria-spec.md` | **No existe todavía** — mapa de memoria |
+| `docs/03-memoria-spec.md` | Mapa de memoria: tres espacios, direcciones fijas, ABI, carga con `SWP` |
 
 Ante conflicto entre documentos, **`01-isa-spec.md` tiene precedencia**: fue validado completo por el autor (ago 2026) y de él deriva el microcódigo.
 

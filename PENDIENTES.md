@@ -26,14 +26,11 @@ Son internas de la tarjeta de control, porque el generador de inmediatos se mud�
 
 ---
 
-### [~] 3. Las interrupciones no estaban documentadas — PARCIAL
+### [x] 3. Las interrupciones no estaban documentadas
 
 **Resuelto en lo documental (16-ago-2026):** `01-isa-spec.md` §7 define IE, la secuencia de atención (R7 ← PC, PC ← vector, IE ← 0), las instrucciones `EI`/`DI`/`RETI` bajo el opcode `1101`, y `IRQ_n` dejó de ser "Reservado" en `00-bus-spec.md`. La decisión de opcodes se tomó: **`1101` = sistema, `1111` = prefijo de expansión** (ver ítem 14).
 
-**Queda pendiente:**
-- Dirección del vector de interrupción → depende de `03-memoria-spec.md` (ítem 12).
-
-*(Las marcas de §7 — subcampo de sistema, IRQ_n por nivel — se validaron el 16-ago-2026, ver ítem 19.)*
+**Cerrado del todo el 18-ago-2026:** el vector quedó fijado en `0x0004` por `03-memoria-spec.md` (ítem 12). *(Las marcas de §7 se habían validado el 16-ago-2026, ver ítem 19.)*
 
 ---
 
@@ -96,18 +93,9 @@ Con `IRQ_n` e `IE` en la dirección son **14 bits** y el 28C64 queda sin margen.
 
 ## Huecos — falta escribir
 
-### [ ] 12. `docs/03-memoria-spec.md` no existe
+### [x] 12. `docs/03-memoria-spec.md` no existe
 
-Ningún documento define cuánta memoria hay ni qué vive en cada rango. Falta decidir y escribir:
-
-- Tamaño de RAM y de ROM de programa.
-- Mapa de memoria: monitor, BIOS, programa de usuario, buffer de pantalla, pila, vector de interrupción.
-- Rangos que decodifica cada tarjeta.
-- Previsión de expansión: segundo banco, zócalos sin poblar.
-
-**Criterio del autor:** el costo no es restricción, la variable a minimizar es tener que rehacer. Diseñar el decodificador para el rango completo de 64K palabras aunque se pueble menos.
-
-**Sigue siendo el único ítem que bloquea el diseño de tarjetas (módulos 7 y 8), y ahora también fija el vector de interrupción (ítem 3).**
+**Resuelto (18-ago-2026):** escrito y validado por el autor. Tres espacios independientes separados por señal (programa 64K + datos 64K + 256 puertos, cero decodificación en v1), 32K poblados por espacio con segundo banco previsto vía A15, reset en `0x0000`, vector en `0x0004`, monitor de 4K, pila por convención (R6 desde `0x7FFF`), mitad alta de datos reservada a periféricos mapeados (VRAM futura). Decisión mayor asociada: **`SWP` en el opcode `1110`** para que el monitor cargue programas (registrada también en `01-isa-spec.md` §11). **Desbloquea el diseño de los módulos 7 y 8.**
 
 ---
 
@@ -175,4 +163,4 @@ El punto crítico es el primero: la decisión del trimpot está tomada y documen
 
 ## Nota sobre las prioridades
 
-Las contradicciones entre documentos (1–11) están resueltas. Quedan cuatro huecos de escritura: el **12 (mapa de memoria)** sigue siendo el único que bloquea diseño de tarjetas (módulos 7 y 8); el **19 (validación del ISA)** bloquea que el ISA sea normativo y conviene hacerlo antes que nada porque es una revisión de lectura, no de escritura; el 17 (E/S) bloquea el módulo 10; el 18 (control) se necesita antes del layout de la tarjeta 9 — que es el primer layout del proyecto.
+Las contradicciones (1–11), el ISA (19), el mapa de memoria (12) y las interrupciones (3) están resueltos. Quedan tres huecos de escritura y uno de KiCad: el **17 (02-io-spec)** bloquea el módulo 10; el **18 (09-control)** se necesita antes del layout de la tarjeta 9 — que es el primer layout del proyecto; el 13 (decisiones.md) no bloquea nada; el **20 (esquemático del reloj)** tiene una decisión ya tomada sin aplicar (trimpot). Con el 12 resuelto, **ya no hay nada que bloquee el diseño de los módulos 2, 3, 7 y 8**.
