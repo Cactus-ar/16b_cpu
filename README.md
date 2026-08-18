@@ -169,6 +169,11 @@ Estas reglas rigen las nueve tarjetas y no se negocian por tarjeta.
 │   ├── comun/
 │   │   └── conectores.kicad_sch   ← Hoja compartida, fuente de verdad
 │   └── Modulo_01_Reloj/
+├── tools/
+│   ├── isa16.hpp                  ← Tabla única del ISA (C++)
+│   ├── asm16.cpp / emu16.cpp      ← Ensamblador y emulador
+│   ├── cpu16-tools.sln            ← Solución de Visual Studio
+│   └── tests/                     ← Programas de prueba
 └── PENDIENTES.md                  ← Discrepancias y huecos abiertos
 ```
 

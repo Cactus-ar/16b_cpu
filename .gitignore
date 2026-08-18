@@ -7,3 +7,10 @@
 *-backups/
 _autosave-*
 fp-info-cache
+
+# Herramientas (tools/) — binarios y salidas regenerables
+tools/build/
+.vs/
+*.vcxproj.user
+tools/tests/*.bin
+tools/tests/*.lst
