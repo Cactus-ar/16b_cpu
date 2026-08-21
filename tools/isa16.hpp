@@ -101,10 +101,59 @@ constexpr unsigned CYC_IN        = 3;
 constexpr unsigned CYC_OUT       = 3;
 constexpr unsigned CYC_HALT      = 2;
 constexpr unsigned CYC_SYS       = 2;
-constexpr unsigned CYC_IRQ       = 3;   // T0 de chequeo + Ta + Tb
+constexpr unsigned CYC_IRQ       = 2;   // Ta + Tb (el chequeo no paga ciclo: T0 se convierte en Ta)
 
 // Frecuencia maxima real del reloj (modulo 01) y ciclo de escritura EEPROM.
 constexpr unsigned long F_MAX_HZ        = 480000;
 constexpr unsigned long EEPROM_WC_CYCLES = 4800;  // 10 ms a 480 kHz (03-spec §6)
+
+} // namespace isa16
+
+// ------------------------------------------------------------- desensamblador
+// (fuera del namespace de constantes por comodidad; compartido por emu16/usim16)
+#include <cstdio>
+#include <string>
+namespace isa16 {
+
+inline const char* functName(unsigned fn) {
+    static const char* N[8] = {"ADD","SUB","AND","OR","XOR","SHL","SHR","SLT"};
+    return N[fn & 7];
+}
+
+inline std::string dis(uint16_t w) {
+    char b[64];
+    unsigned rd = f_rd(w), rs = f_rs(w), rt = f_rt(w);
+    switch (f_op(w)) {
+    case OP_RTYPE: {
+        unsigned fn = f_funct(w);
+        if (fn == FN_SHL || fn == FN_SHR) snprintf(b, sizeof b, "%s R%u, R%u", functName(fn), rd, rs);
+        else snprintf(b, sizeof b, "%s R%u, R%u, R%u", functName(fn), rd, rs, rt);
+        break; }
+    case OP_ADDI: snprintf(b, sizeof b, "ADDI R%u, R%u, %d", rd, rs, sext6(f_imm6(w))); break;
+    case OP_LW:   snprintf(b, sizeof b, "LW R%u, %d(R%u)",  rd, sext6(f_imm6(w)), rs); break;
+    case OP_SW:   snprintf(b, sizeof b, "SW R%u, %d(R%u)",  rd, sext6(f_imm6(w)), rs); break;
+    case OP_SWP:  snprintf(b, sizeof b, "SWP R%u, %d(R%u)", rd, sext6(f_imm6(w)), rs); break;
+    case OP_BEQ:  snprintf(b, sizeof b, "BEQ R%u, R%u, %+d", rd, rs, sext6(f_imm6(w))); break;
+    case OP_BNE:  snprintf(b, sizeof b, "BNE R%u, R%u, %+d", rd, rs, sext6(f_imm6(w))); break;
+    case OP_LUI:  snprintf(b, sizeof b, "LUI R%u, 0x%02X", rd, f_imm8(w)); break;
+    case OP_ORI:  snprintf(b, sizeof b, "ORI R%u, 0x%02X", rd, f_imm8(w)); break;
+    case OP_JALR: snprintf(b, sizeof b, "JALR R%u, R%u", rd, rs); break;
+    case OP_JMP:  snprintf(b, sizeof b, "JMP %+d", sext12(f_imm12(w))); break;
+    case OP_IN:   snprintf(b, sizeof b, "IN R%u, 0x%02X",  rd, f_imm8(w)); break;
+    case OP_OUT:  snprintf(b, sizeof b, "OUT R%u, 0x%02X", rd, f_imm8(w)); break;
+    case OP_HALT: snprintf(b, sizeof b, "HALT"); break;
+    case OP_SYS:
+        switch (f_funct(w)) {
+        case SYS_EI:   snprintf(b, sizeof b, "EI");   break;
+        case SYS_DI:   snprintf(b, sizeof b, "DI");   break;
+        case SYS_RETI: snprintf(b, sizeof b, "RETI"); break;
+        default:       snprintf(b, sizeof b, "SYS? %u", f_funct(w));
+        }
+        break;
+    case OP_PREFIX: snprintf(b, sizeof b, "PREFIJO! (indefinido)"); break;
+    default: snprintf(b, sizeof b, "???");
+    }
+    return b;
+}
 
 } // namespace isa16

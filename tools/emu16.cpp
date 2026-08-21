@@ -53,43 +53,6 @@ struct Machine {
 
 static void setReg(Machine& m, unsigned r, uint16_t v) { if (r) m.R[r] = v; }  // R0 cableado a cero
 
-static const char* FN_NAME[8] = {"ADD","SUB","AND","OR","XOR","SHL","SHR","SLT"};
-
-static std::string dis(uint16_t w) {
-    char b[64];
-    unsigned rd = f_rd(w), rs = f_rs(w), rt = f_rt(w);
-    switch (f_op(w)) {
-    case OP_RTYPE: {
-        unsigned fn = f_funct(w);
-        if (fn == FN_SHL || fn == FN_SHR) snprintf(b, sizeof b, "%s R%u, R%u", FN_NAME[fn], rd, rs);
-        else snprintf(b, sizeof b, "%s R%u, R%u, R%u", FN_NAME[fn], rd, rs, rt);
-        break; }
-    case OP_ADDI: snprintf(b, sizeof b, "ADDI R%u, R%u, %d", rd, rs, sext6(f_imm6(w))); break;
-    case OP_LW:   snprintf(b, sizeof b, "LW R%u, %d(R%u)",  rd, sext6(f_imm6(w)), rs); break;
-    case OP_SW:   snprintf(b, sizeof b, "SW R%u, %d(R%u)",  rd, sext6(f_imm6(w)), rs); break;
-    case OP_SWP:  snprintf(b, sizeof b, "SWP R%u, %d(R%u)", rd, sext6(f_imm6(w)), rs); break;
-    case OP_BEQ:  snprintf(b, sizeof b, "BEQ R%u, R%u, %+d", rd, rs, sext6(f_imm6(w))); break;
-    case OP_BNE:  snprintf(b, sizeof b, "BNE R%u, R%u, %+d", rd, rs, sext6(f_imm6(w))); break;
-    case OP_LUI:  snprintf(b, sizeof b, "LUI R%u, 0x%02X", rd, f_imm8(w)); break;
-    case OP_ORI:  snprintf(b, sizeof b, "ORI R%u, 0x%02X", rd, f_imm8(w)); break;
-    case OP_JALR: snprintf(b, sizeof b, "JALR R%u, R%u", rd, rs); break;
-    case OP_JMP:  snprintf(b, sizeof b, "JMP %+d", sext12(f_imm12(w))); break;
-    case OP_IN:   snprintf(b, sizeof b, "IN R%u, 0x%02X",  rd, f_imm8(w)); break;
-    case OP_OUT:  snprintf(b, sizeof b, "OUT R%u, 0x%02X", rd, f_imm8(w)); break;
-    case OP_HALT: snprintf(b, sizeof b, "HALT"); break;
-    case OP_SYS:
-        switch (f_funct(w)) {
-        case SYS_EI:   snprintf(b, sizeof b, "EI");   break;
-        case SYS_DI:   snprintf(b, sizeof b, "DI");   break;
-        case SYS_RETI: snprintf(b, sizeof b, "RETI"); break;
-        default:       snprintf(b, sizeof b, "SYS? %u", f_funct(w));
-        }
-        break;
-    case OP_PREFIX: snprintf(b, sizeof b, "PREFIJO! (indefinido)"); break;
-    default: snprintf(b, sizeof b, "???");
-    }
-    return b;
-}
 
 // banderas de la ALU sobre un resultado (Z siempre; C segun operacion)
 static void flagsZ(Machine& m, uint16_t res, bool c) { m.Z = (res == 0); m.C = c; }
