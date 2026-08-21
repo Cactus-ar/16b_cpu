@@ -91,12 +91,15 @@ Semántica de banderas y detalles (validados por el autor, ago 2026):
 
 El generador de inmediatos vive en la **tarjeta de control** (junto con el IR); `IMM_SEL0/1` son señales internas de esa tarjeta, no del backplane. Esta tabla es la **única fuente de verdad** — `00-bus-spec.md` remite acá.
 
-| SEL1 | SEL0 | Campo | Extensión | Lo usan |
-|---|---|---|---|---|
-| 0 | 0 | imm6 [5:0] | Signo | `ADDI`, `LW`, `SW`, `BEQ`, `BNE` |
-| 0 | 1 | imm8 [7:0] | **← desplazado 8 posiciones** (bits 15–8, resto en cero) | `LUI` |
-| 1 | 0 | imm12 [11:0] | Signo | `JMP` |
-| 1 | 1 | imm8 [7:0] | Ceros | `ORI`, `IN`, `OUT` |
+| SEL2 | SEL1 | SEL0 | Campo | Extensión | Lo usan |
+|---|---|---|---|---|---|
+| 0 | 0 | 0 | imm6 [5:0] | Signo | `ADDI`, `LW`, `SW`, `SWP`, `BEQ`, `BNE` |
+| 0 | 0 | 1 | imm8 [7:0] | **← desplazado 8 posiciones** (bits 15–8, resto en cero) | `LUI` |
+| 0 | 1 | 0 | imm12 [11:0] | Signo | `JMP` |
+| 0 | 1 | 1 | imm8 [7:0] | Ceros | `ORI`, `IN`, `OUT` |
+| 1 | 0 | 0 | — | **Constante `IRQ_VECTOR` (0x0004)** | Atención de interrupción (§7) |
+
+*(`IMM_SEL2` se agregó el 20-ago-2026 al generar el microcódigo: el vector es una constante, no un campo del IR, y los cuatro modos de 2 bits ya estaban ocupados. Los códigos previos no cambian — SEL2=0 los deja intactos.)*
 
 **Por qué está en compuertas y no en una EEPROM:** una tabla lo haría con menos chips, pero ocultaría los cuatro modos de extensión, que en lógica discreta son visibles y verificables. Es exactamente la zona gris del proyecto, y se resolvió a favor de la claridad. Revisar solo con motivo.
 
@@ -304,12 +307,19 @@ Hasta que se implemente, **ejecutar `1111` es comportamiento indefinido**. El en
 
 ## 10. Apéndice — notas de implementación de la tarjeta de control
 
-*Este apéndice es temporal: su lugar definitivo es `modulos/09-control.md` cuando ese documento se escriba. Se registra acá para no perderlo de nuevo.*
+*Este apéndice es temporal: su lugar definitivo es `modulos/09-control.md` cuando ese documento se escriba. Fijado el 20-ago-2026 al escribir el microensamblador (`tools/ucode16.cpp`), que es quien genera las imágenes reales.*
 
-- **ROM de control: 14 bits de dirección** (con `IRQ_n` e `IE` incluidos en la dirección), lo que descarta el 28C64 y lleva a **4 × AT28C256** (32K × 8, 15 bits — un bit de dirección de margen). Coincide con la estandarización de toda la memoria en la huella JEDEC de 28 pines (`componentes.md`).
-- Desglose exacto de los 14 bits de dirección (opcode, contador de microciclo, Z, C, IRQ, IE) — borrador: op(4) + T(3) + funct(3) + Z + C + IRQ + IE = 14. A fijar en `modulos/09-control.md`.
-- Las cuatro EEPROM en paralelo dan hasta 32 señales de control de salida. **Ojo:** la cuenta preliminar de señales necesarias da ~33 (23 del backplane + IMM_SEL0/1, fin de instrucción, control de IE, HALT y los selectores de los muxes de RSA/RSB/RSW). Se resuelve al diseñar la tarjeta: compactando señales (p. ej. IE como bit de valor + strobe) o con una **quinta ROM** — la compra de memoria ya contempla unidades de sobra (16-ago-2026).
-- `IMM_SEL0/1` y el contador de microciclo son **internos** de la tarjeta de control; no viajan por el backplane (B22/B23 quedan reservados).
+- **Dirección de la ROM: 14 bits**, `A13..A0 = op[3:0] · funct[2:0] · T[2:0] · Z · C · IRQ · IE`. A14 a masa; imagen de 16K por chip. El `funct` va en la dirección porque las instrucciones de sistema (§7) se distinguen por ese campo; para R-type el contenido se replica.
+- **Cinco EEPROM en paralelo** (5 × AT28C256): 40 salidas, **37 usadas, 3 de margen**. Decisión del autor (20-ago-2026): señales directas — un pin por señal, visible al osciloscopio — en vez de codificar el campo de bus con un decodificador. El invariante de un solo emisor lo verifica estáticamente el microensamblador sobre las 16.384 direcciones.
+- Asignación de salidas por ROM (normativa para el layout de la tarjeta 9):
+  - **ROM0** — habilitaciones de bus (activas en bajo): `PC_OUT_n`, `RA_OUT_n`, `RB_OUT_n`, `ALU_OUT_n`, `RAM_OUT_n`, `ROM_OUT_n`, `IMM_OUT_n`, `IO_OUT_n`
+  - **ROM1** — cargas: `PC_LD`, `REG_WE`, `MAR_LD`, `IR_LD`, `RAM_WE_n`, `FLAGS_LD`, `IO_LD`, `TMPA_LD`
+  - **ROM2** — `TMPB_LD`, `PROG_WE_n`, `ALU_OP[3:0]`, `ALU_OP_SRC` (1 = pasar el `funct` del IR al selector de la ALU; 0 = usar el campo de la ROM), `PC_INC`
+  - **ROM3** — `PC_AOUT_n`, `IMM_SEL[2:0]`, `RSA_SEL[1:0]` (rs/rd/R7), `RSB_SEL[1:0]` (rt/rd/rs)
+  - **ROM4** — `RSW_SEL` (rd/R7), `IE_LD`, `IE_VAL`, `HALT_CTL`, `uEND` (fin de instrucción: reinicia el contador T), 3 salidas libres
+- **`IRQ_n` se muestrea en el límite de instrucción** con un flip-flop en la tarjeta de control; la dirección de la ROM ve el valor muestreado, no la línea cruda. Sin ese latch, una IRQ llegando a mitad de instrucción haría ambiguos los estados T0/T1 (¿atención o instrucción en curso?). Es la misma semántica que implementa `emu16`.
+- **Bus keeper:** en los microciclos sin transferencia (HALT, EI/DI, salto no tomado) se mantiene `ALU_OUT_n` activo para cumplir la regla de "exactamente un emisor" — el bus nunca flota.
+- `IMM_SEL[2:0]`, los selectores RSA/RSB/RSW y el contador de microciclo son **internos** de la tarjeta de control; no viajan por el backplane (B22/B23 quedan reservados).
 - El registro de microinstrucción debe resetear a un valor con **todas las habilitaciones de bus inactivas** (son activas en bajo → reset a unos, no a ceros).
 
 ---

@@ -28,12 +28,14 @@ Toda la memoria del proyecto usa esa única huella. Ventajas:
 
 | Uso | Chip | Cant. | Comprar | Estado |
 |---|---|---|---|---|
-| ROM de microcódigo | AT28C256-15PU | 4 | 10 | Por verificar |
+| ROM de microcódigo | AT28C256-15PU | 5 | 10 | Por verificar |
 | Generador de inmediatos | AT28C256-15PU | 2 | 5 | Por verificar |
 | Memoria de programa | AT28C256-15PU | 4 | 5 | Por verificar |
 | RAM de datos | AS6C62256-55PCN | 2 | 6 | Por verificar |
 | **Banco de registros** | AS6C62256-55PCN | 4 | 8 | Por verificar |
-| **Total** | | **16** | **34** | |
+| **Total** | | **17** | **34** | |
+
+> ROM de microcódigo: 4 → 5 chips el 20-ago-2026 — la cuenta final del microensamblador dio 37 señales de control (ver `01-isa-spec.md` §10); la compra de 10 ya lo cubría.
 
 > La memoria de programa pasó de 2 a 4 chips el 18-ago-2026: los dos bancos (monitor + usuario) van poblados desde la v1 por requisito de `SWP` (`03-memoria-spec.md` §2). La compra no cambia: el margen del pedido lo absorbe (5 compradas para 4 en diseño, más la reserva del generador como respaldo del mismo chip).
 
